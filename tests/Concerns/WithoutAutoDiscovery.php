@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace LaravelModular\LaravelModular\Tests;
+namespace LaravelModular\LaravelModular\Tests\Concerns;
 
 /**
  * Boots the package with parts of auto-discovery switched off.
  */
-abstract class NoDiscoveryTestCase extends TestCase
+trait WithoutAutoDiscovery
 {
     protected function getEnvironmentSetUp($app): void
     {
