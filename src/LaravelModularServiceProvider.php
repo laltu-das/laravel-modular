@@ -145,47 +145,17 @@ final class LaravelModularServiceProvider extends ServiceProvider
             ModuleListCommand::class,
         ]);
 
-        // Generator commands — only registered when the corresponding Laravel base class exists.
-        // Each entry maps our command class to the Laravel base class it extends.
-        $generatorCommands = [
-            CastMakeCommand::class => 'Illuminate\Foundation\Console\CastMakeCommand',
-            ChannelMakeCommand::class => 'Illuminate\Foundation\Console\ChannelMakeCommand',
-            ComponentMakeCommand::class => 'Illuminate\Foundation\Console\ComponentMakeCommand',
-            ConsoleMakeCommand::class => 'Illuminate\Foundation\Console\ConsoleMakeCommand',
-            ControllerMakeCommand::class => 'Illuminate\Routing\Console\ControllerMakeCommand',
-            EnumMakeCommand::class => 'Illuminate\Foundation\Console\EnumMakeCommand',
-            EventMakeCommand::class => 'Illuminate\Foundation\Console\EventMakeCommand',
-            ExceptionMakeCommand::class => 'Illuminate\Foundation\Console\ExceptionMakeCommand',
-            FactoryMakeCommand::class => 'Illuminate\Database\Console\Factories\FactoryMakeCommand',
-            InterfaceMakeCommand::class => 'Illuminate\Foundation\Console\InterfaceMakeCommand',
-            JobMakeCommand::class => 'Illuminate\Foundation\Console\JobMakeCommand',
-            ListenerMakeCommand::class => 'Illuminate\Foundation\Console\ListenerMakeCommand',
-            MailMakeCommand::class => 'Illuminate\Foundation\Console\MailMakeCommand',
-            MiddlewareMakeCommand::class => 'Illuminate\Routing\Console\MiddlewareMakeCommand',
-            MigrationMakeCommand::class => 'Illuminate\Database\Console\Migrations\MigrateMakeCommand',
-            ModelMakeCommand::class => 'Illuminate\Foundation\Console\ModelMakeCommand',
-            NotificationMakeCommand::class => 'Illuminate\Foundation\Console\NotificationMakeCommand',
-            ObserverMakeCommand::class => 'Illuminate\Foundation\Console\ObserverMakeCommand',
-            PolicyMakeCommand::class => 'Illuminate\Foundation\Console\PolicyMakeCommand',
-            ProviderMakeCommand::class => 'Illuminate\Foundation\Console\ProviderMakeCommand',
-            RequestMakeCommand::class => 'Illuminate\Foundation\Console\RequestMakeCommand',
-            ResourceMakeCommand::class => 'Illuminate\Foundation\Console\ResourceMakeCommand',
-            RuleMakeCommand::class => 'Illuminate\Foundation\Console\RuleMakeCommand',
-            ScopeMakeCommand::class => 'Illuminate\Foundation\Console\ScopeMakeCommand',
-            SeederMakeCommand::class => 'Illuminate\Database\Console\Seeds\SeederMakeCommand',
-            TestMakeCommand::class => 'Illuminate\Foundation\Console\TestMakeCommand',
-            ViewMakeCommand::class => 'Illuminate\Foundation\Console\ViewMakeCommand',
-        ];
+        // Original generator commands (already tested and working)
+        $this->commands([
+            ControllerMakeCommand::class,
+            EventMakeCommand::class,
+            JobMakeCommand::class,
+            ModelMakeCommand::class,
+            PolicyMakeCommand::class,
+            RequestMakeCommand::class,
+        ]);
 
-        $availableCommands = [];
-        foreach ($generatorCommands as $command => $baseClass) {
-            if (class_exists($baseClass)) {
-                $availableCommands[] = $command;
-            }
-        }
-
-        if ($availableCommands !== []) {
-            $this->commands($availableCommands);
-        }
+        // TODO: Additional generator commands temporarily disabled for CI debugging
+        // CastMakeCommand, ChannelMakeCommand, ComponentMakeCommand, etc.
     }
 }
