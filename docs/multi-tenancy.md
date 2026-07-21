@@ -4,8 +4,8 @@ Two hooks integrate the package with your existing `TenantContext` patterns with
 
 ## The two contracts
 
-1. **`tenant_resolver`** — a class implementing `LaravelModular\LaravelModular\Contracts\TenantResolver`. It feeds `LaravelModular::tenant()` and the tenant payload of the `ModuleBooting` / `ModuleBooted` lifecycle events.
-2. **`tenant_voter`** — a class implementing `LaravelModular\LaravelModular\Contracts\TenantModuleVoter`. It decides per tenant whether a module is active.
+1. **`tenant_resolver`** — a class implementing `Laltu\LaravelModular\Contracts\TenantResolver`. It feeds `LaravelModular::tenant()` and the tenant payload of the `ModuleBooting` / `ModuleBooted` lifecycle events.
+2. **`tenant_voter`** — a class implementing `Laltu\LaravelModular\Contracts\TenantModuleVoter`. It decides per tenant whether a module is active.
 
 ```php
 // config/laravel-modular.php
@@ -14,9 +14,9 @@ Two hooks integrate the package with your existing `TenantContext` patterns with
 ```
 
 ```php
-use LaravelModular\LaravelModular\Contracts\TenantResolver;
-use LaravelModular\LaravelModular\Contracts\TenantModuleVoter;
-use LaravelModular\LaravelModular\Support\Module;
+use Laltu\LaravelModular\Contracts\TenantResolver;
+use Laltu\LaravelModular\Contracts\TenantModuleVoter;
+use Laltu\LaravelModular\Support\Module;
 
 final class CurrentTenantResolver implements TenantResolver
 {
@@ -50,7 +50,7 @@ Combined with the `.disabled` marker, a module is fully active only when **both*
 ## Reading state at runtime
 
 ```php
-use LaravelModular\LaravelModular\Facades\LaravelModular;
+use Laltu\LaravelModular\Facades\LaravelModular;
 
 LaravelModular::modules();      // modules enabled for the current tenant
 LaravelModular::moduleNames();  // ['Catalog', 'Billing', ...]
@@ -67,13 +67,75 @@ All of these only expose modules enabled for the **current** tenant, so per-requ
 `ModuleBooting` / `ModuleBooted` are dispatched per enabled module during boot and carry the resolved tenant, letting your listeners do tenant-aware module initialization:
 
 ```php
-use LaravelModular\LaravelModular\Events\ModuleBooted;
+use Laltu\LaravelModular\Events\ModuleBooted;
 
 Event::listen(function (ModuleBooted $event): void {
     // $event->module and $event->tenant
 });
 ```
 
+## Example: plan-based activation with an Eloquent tenant
+
+```php
+// app/Tenancy/CurrentTenantResolver.php
+namespace App\Tenancy;
+
+use Laltu\LaravelModular\Contracts\TenantResolver;
+
+final class CurrentTenantResolver implements TenantResolver
+{
+    public function current(): mixed
+    {
+        return app(TenantContext::class)->tenant();   // ?App\Models\Tenant
+    }
+}
+```
+
+```php
+// app/Tenancy/PlanModuleVoter.php
+namespace App\Tenancy;
+
+use Laltu\LaravelModular\Contracts\TenantModuleVoter;
+use Laltu\LaravelModular\Support\Module;
+
+final class PlanModuleVoter implements TenantModuleVoter
+{
+    /** Mapping of plan slug to the modules that plan unlocks. */
+    private const PLAN_MODULES = [
+        'starter' => ['Catalog'],
+        'growth' => ['Catalog', 'Billing', 'Shipping'],
+        'enterprise' => ['Catalog', 'Billing', 'Shipping', 'Reporting'],
+    ];
+
+    public function allows(Module $module, mixed $tenant): bool
+    {
+        return in_array($module->name, self::PLAN_MODULES[$tenant?->plan] ?? [], true);
+    }
+}
+```
+
+```php
+// config/laravel-modular.php
+'tenant_resolver' => App\Tenancy\CurrentTenantResolver::class,
+'tenant_voter' => App\Tenancy\PlanModuleVoter::class,
+```
+
+Initialize the tenant in your middleware as usual; the package reads it during module registration:
+
+```php
+// app/Http/Middleware/InitializeTenant.php
+public function handle(Request $request, Closure $next)
+{
+    app(TenantContext::class)->set(
+        Tenant::whereDomain($request->getHost())->firstOrFail()
+    );
+
+    return $next($request);
+}
+```
+
+Because providers are registered very early in the application lifecycle, make sure your tenant is resolvable by then (e.g. bound in a service provider's `register()` from the current request context) when you use a voter.
+
 ## Support classes
 
-`LaravelModular\LaravelModular\Support\CurrentTenant` is available from the container anywhere you cannot use the facade: `get()` returns the tenant (or `null`), `has()` reports whether a resolver is configured **and** returned a non-null tenant.
+`Laltu\LaravelModular\Support\CurrentTenant` is available from the container anywhere you cannot use the facade: `get()` returns the tenant (or `null`), `has()` reports whether a resolver is configured **and** returned a non-null tenant.

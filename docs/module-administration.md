@@ -20,7 +20,7 @@ Creates an empty `.disabled` marker file inside the module. A disabled module is
 
 Disabling is **non-destructive**: the code stays on disk and autoloadable, ready to be re-enabled. Running the command again reports `Module [Billing] is already disabled.`; running it for a missing module fails with `Module [Billing] does not exist.`
 
-After the marker is created, a `LaravelModular\LaravelModular\Events\ModuleDisabled` event is dispatched carrying the module name.
+After the marker is created, a `Laltu\LaravelModular\Events\ModuleDisabled` event is dispatched carrying the module name.
 
 ## Enabling a module
 
@@ -28,9 +28,39 @@ After the marker is created, a `LaravelModular\LaravelModular\Events\ModuleDisab
 php artisan module:enable Billing
 ```
 
-Removes the `.disabled` marker (reporting `Module [Billing] is already enabled.` when there is nothing to remove) and dispatches `LaravelModular\LaravelModular\Events\ModuleEnabled`.
+Removes the `.disabled` marker (reporting `Module [Billing] is already enabled.` when there is nothing to remove) and dispatches `Laltu\LaravelModular\Events\ModuleEnabled`.
 
 Both commands flush the package's module cache, so they always reflect the on-disk state.
+
+## Reacting to lifecycle events
+
+All four lifecycle events are regular Laravel events you can listen to:
+
+```php
+use Illuminate\Support\Facades\Event;
+use Laltu\LaravelModular\Events\ModuleBooted;
+use Laltu\LaravelModular\Events\ModuleBooting;
+use Laltu\LaravelModular\Events\ModuleDisabled;
+use Laltu\LaravelModular\Events\ModuleEnabled;
+
+Event::listen(function (ModuleBooting $event): void {
+    // fires per enabled module before it boots; $event->module, $event->tenant
+});
+
+Event::listen(function (ModuleBooted $event): void {
+    // module fully booted (providers, routes, listeners, config, views...)
+});
+
+Event::listen(function (ModuleDisabled $event): void {
+    Cache::forget('enabled_modules');   // $event->name — 'Billing'
+});
+
+Event::listen(function (ModuleEnabled $event): void {
+    Cache::forget('enabled_modules');
+});
+```
+
+A practical use: warm per-module settings into cache when a module boots, or clear feature caches when one is toggled.
 
 ## Verifying boundaries
 

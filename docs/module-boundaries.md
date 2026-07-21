@@ -37,6 +37,64 @@ Notes:
 - Only **enabled** modules are inspected; disabled modules are skipped.
 - The inspector scans every `.php` file in each module for references to other modules' namespaces (`Modules\<Module>\<TopLevelDirectory>\...`).
 
+## Allowed vs. forbidden references
+
+Given the default `public_directories` (`Contracts`, `Events`, `Enums`), from inside the Reporting module:
+
+```php
+// Modules/Reporting/Listeners/ProjectRevenue.php — ALLOWED: public events
+use Modules\Invoicing\Events\InvoiceIssued;
+
+final class ProjectRevenue
+{
+    public function handle(InvoiceIssued $event): void {}
+}
+```
+
+```php
+// Modules/Reporting/Services/InvoiceExporter.php — ALLOWED: public contract
+use Modules\Invoicing\Contracts\InvoiceGateway;
+
+final class InvoiceExporter
+{
+    public function __construct(private InvoiceGateway $gateway) {}
+}
+```
+
+```php
+// Modules/Reporting/Jobs/RecalculateLedger.php — VIOLATION: internal class
+use Modules\Invoicing\Internal\Ledger\IncomeLedger;
+
+final class RecalculateLedger {}
+```
+
+```
+Module boundary violations detected (1):
+| Reporting | Jobs/RecalculateLedger.php | Modules\Invoicing\Internal\Ledger\IncomeLedger |
+```
+
+## Verifying in CI
+
+The command's exit code makes it a one-line pipeline step:
+
+```yaml
+# .github/workflows/module-boundaries.yml
+name: module-boundaries
+on: [push, pull_request]
+
+jobs:
+  boundaries:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+      - run: composer install --no-interaction --prefer-dist
+      - run: php artisan module:boundaries
+```
+
 ## Widening a module's public API
 
 Expose more of a module deliberately by adding directories to `public_directories` in `config/laravel-modular.php`:

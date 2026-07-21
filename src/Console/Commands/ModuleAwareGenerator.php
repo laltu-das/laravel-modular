@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace LaravelModular\LaravelModular\Console\Commands;
+namespace Laltu\LaravelModular\Console\Commands;
 
 use Illuminate\Support\Str;
 use InvalidArgumentException;
-use LaravelModular\LaravelModular\Support\Config;
+use Laltu\LaravelModular\Support\Config;
 use Symfony\Component\Console\Input\InputOption;
 
 trait ModuleAwareGenerator
@@ -48,12 +48,21 @@ trait ModuleAwareGenerator
         $directory = str_replace('/', '\\', $this->moduleDirectory());
         $name = Str::after($name, $prefix.$directory.'\\');
 
-        return $base.'/'.$this->modulePathDirectory().'/'.str_replace('\\', '/', $name).'.php';
+        return $base.'/'.$this->modulePathDirectory().'/'.str_replace('\\', '/', $name).'.'.$this->moduleFileExtension();
     }
 
     protected function modulePathDirectory(): string
     {
         return $this->moduleDirectory();
+    }
+
+    /**
+     * File extension used for generated artifacts. Views override this with
+     * the --extension option so `make:view` keeps producing .blade.php files.
+     */
+    protected function moduleFileExtension(): string
+    {
+        return 'php';
     }
 
     private function moduleOption(): string

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use LaravelModular\LaravelModular\LaravelModular;
+use Laltu\LaravelModular\LaravelModular;
 use Modules\Billing\Events\InvoicePaid;
 use Modules\Catalog\Events\OrderShipped;
 

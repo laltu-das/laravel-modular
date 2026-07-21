@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace LaravelModular\LaravelModular\Exceptions;
+namespace Laltu\LaravelModular\Exceptions;
 
 use InvalidArgumentException;
 

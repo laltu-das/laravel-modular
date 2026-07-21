@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace LaravelModular\LaravelModular\Boundaries;
+namespace Laltu\LaravelModular\Boundaries;
 
 use Illuminate\Filesystem\Filesystem;
-use LaravelModular\LaravelModular\Support\Module;
+use Laltu\LaravelModular\Support\Module;
 
 /**
  * Spring Modulith-style boundary verification. A module's public API is made

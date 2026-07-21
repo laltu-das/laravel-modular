@@ -23,6 +23,73 @@ Discovery details:
 - Listeners in `Listeners/` whose `handle()` method has no class type-hint are skipped; declare them in the `module.php` manifest instead if you want to wire them manually.
 - Policies and observers follow the strict `{Model}Policy` / `{Model}Observer` naming convention: `Policies/ProductPolicy.php` maps to `Models/Product.php`.
 
+## Examples per convention
+
+A command dropped into `Console/Commands/` shows up in `php artisan` without registration:
+
+```php
+// Modules/Catalog/Console/Commands/SyncPricesCommand.php
+namespace Modules\Catalog\Console\Commands;
+
+use Illuminate\Console\Command;
+
+final class SyncPricesCommand extends Command
+{
+    protected $signature = 'catalog:sync-prices';
+
+    public function handle(): int
+    {
+        // ...
+        return self::SUCCESS;
+    }
+}
+```
+
+Every concrete `*ServiceProvider` below `Providers/` gets the full `register()` + `boot()` lifecycle:
+
+```php
+// Modules/Billing/Providers/StripeServiceProvider.php
+namespace Modules\Billing\Providers;
+
+use Illuminate\Support\ServiceProvider;
+
+final class StripeServiceProvider extends ServiceProvider
+{
+    public function register(): void
+    {
+        $this->app->singleton(StripeClient::class, fn () => new StripeClient(config('billing.stripe_key')));
+    }
+}
+```
+
+Module routes behave like application routes — grouping, naming, and middleware are up to you:
+
+```php
+// Modules/Billing/routes/web.php
+use Illuminate\Support\Facades\Route;
+use Modules\Billing\Http\Controllers\InvoiceController;
+
+Route::middleware('web')->prefix('billing')->name('billing.')->group(function (): void {
+    Route::get('invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+});
+```
+
+Views and translations from `resources/views` and `resources/lang` are namespaced by the lower-cased module name:
+
+```php
+return view('billing::invoices.index');     // Modules/Billing/resources/views/invoices/index.blade.php
+echo trans('billing::messages.thanks');     // Modules/Billing/resources/lang/en/messages.php
+```
+
+Module config files are merged under their file name:
+
+```php
+// Modules/Billing/config/billing.php
+return ['currency' => 'USD'];
+
+config('billing.currency'); // 'USD'
+```
+
 ## Disabling aspects individually
 
 Every aspect can be turned off in `config/laravel-modular.php`:
@@ -58,4 +125,4 @@ A module containing a `.disabled` marker file is never discovered (see [module a
 
 ## Lifecycle events
 
-When the application boots, `LaravelModular\LaravelModular\Events\ModuleBooting` fires before each enabled module boots and `ModuleBooted` fires after. Both carry the module and the current tenant resolved by the configured [tenant resolver](multi-tenancy.md).
+When the application boots, `Laltu\LaravelModular\Events\ModuleBooting` fires before each enabled module boots and `ModuleBooted` fires after. Both carry the module and the current tenant resolved by the configured [tenant resolver](multi-tenancy.md).

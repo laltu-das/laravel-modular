@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use LaravelModular\LaravelModular\Support\Config;
+use Laltu\LaravelModular\Support\Config;
 
 it('reads booleans with fallback', function () {
     config(['demo.flag' => true, 'demo.bad' => 'yes']);

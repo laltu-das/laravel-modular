@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
-use LaravelModular\LaravelModular\LaravelModular;
-use LaravelModular\LaravelModular\Support\CurrentTenant;
+use Laltu\LaravelModular\LaravelModular;
+use Laltu\LaravelModular\Support\CurrentTenant;
 
 it('resolves the current tenant through the configured resolver', function () {
     expect(app(LaravelModular::class)->tenant())->toBe(123)

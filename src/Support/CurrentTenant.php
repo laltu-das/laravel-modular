@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace LaravelModular\LaravelModular\Support;
+namespace Laltu\LaravelModular\Support;
 
-use LaravelModular\LaravelModular\Contracts\TenantResolver;
+use Laltu\LaravelModular\Contracts\TenantResolver;
 
 /**
  * Thin wrapper around the optionally configured TenantResolver so the rest of

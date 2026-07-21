@@ -7,7 +7,7 @@
         "laltu",
         "laravel-modular"
     ],
-    "homepage": "https://github.com/laltu/laravel-modular",
+    "homepage": "https://github.com/laltu-das/laravel-modular",
     "license": "MIT",
     "authors": [
         {
@@ -35,12 +35,12 @@
     },
     "autoload": {
         "psr-4": {
-            "LaravelModular\\LaravelModular\\": "src/"
+            "Laltu\\LaravelModular\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "LaravelModular\\LaravelModular\\Tests\\": "tests/",
+            "Laltu\\LaravelModular\\Tests\\": "tests/",
             "Workbench\\App\\": "workbench/app/",
             "Workbench\\Database\\Factories\\": "workbench/database/factories/",
             "Workbench\\Database\\Seeders\\": "workbench/database/seeders/"
@@ -90,10 +90,10 @@
     "extra": {
         "laravel": {
             "providers": [
-                "LaravelModular\\LaravelModular\\LaravelModularServiceProvider"
+                "Laltu\\LaravelModular\\LaravelModularServiceProvider"
             ],
             "aliases": {
-                "LaravelModular": "LaravelModular\\LaravelModular\\Facades\\LaravelModular"
+                "LaravelModular": "Laltu\\LaravelModular\\Facades\\LaravelModular"
             }
         }
     },

@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace LaravelModular\LaravelModular;
+namespace Laltu\LaravelModular;
 
 use Closure;
 use Illuminate\Contracts\Events\Dispatcher;
-use LaravelModular\LaravelModular\Contracts\TenantModuleVoter;
-use LaravelModular\LaravelModular\Discovery\ModuleRepository;
-use LaravelModular\LaravelModular\Exceptions\ModuleNotFound;
-use LaravelModular\LaravelModular\Support\CurrentTenant;
-use LaravelModular\LaravelModular\Support\Module;
+use Laltu\LaravelModular\Contracts\TenantModuleVoter;
+use Laltu\LaravelModular\Discovery\ModuleRepository;
+use Laltu\LaravelModular\Exceptions\ModuleNotFound;
+use Laltu\LaravelModular\Support\CurrentTenant;
+use Laltu\LaravelModular\Support\Module;
 
 final readonly class LaravelModular
 {

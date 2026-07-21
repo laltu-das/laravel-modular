@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace LaravelModular\LaravelModular\Tests;
+namespace Laltu\LaravelModular\Tests;
 
-use LaravelModular\LaravelModular\LaravelModularServiceProvider;
+use Laltu\LaravelModular\LaravelModularServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 
 abstract class TestCase extends Orchestra

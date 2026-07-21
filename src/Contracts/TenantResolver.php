@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace LaravelModular\LaravelModular\Contracts;
+namespace Laltu\LaravelModular\Contracts;
 
 interface TenantResolver
 {

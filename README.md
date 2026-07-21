@@ -26,6 +26,7 @@ This README covers the essentials. Detailed guides live in the [docs](docs) dire
 - [Multi-tenancy](docs/multi-tenancy.md)
 - [Module boundaries](docs/module-boundaries.md)
 - [Configuration reference](docs/configuration.md)
+- [Facade reference](docs/facade-reference.md)
 
 ## Requirements
 
@@ -37,6 +38,12 @@ This README covers the essentials. Detailed guides live in the [docs](docs) dire
 ```bash
 composer require laltu/laravel-modular
 php artisan vendor:publish --tag=laravel-modular-config
+```
+
+Package classes live under the `Laltu\LaravelModular` namespace (the `LaravelModular` facade alias, the `laravel-modular` config key, and all Artisan commands are unchanged by this):
+
+```php
+use Laltu\LaravelModular\Facades\LaravelModular;
 ```
 
 ## Create a module
@@ -191,7 +198,7 @@ Modules stay decoupled by talking through events — never through each other's 
 - Publish with the `LaravelModular` facade (or plain `event()`):
 
 ```php
-use LaravelModular\LaravelModular\Facades\LaravelModular;
+use Laltu\LaravelModular\Facades\LaravelModular;
 use Modules\Billing\Events\InvoicePaid;
 
 LaravelModular::publish(new InvoicePaid(amount: 2500));
@@ -235,9 +242,9 @@ Two hooks integrate the package with your existing `TenantContext` patterns:
 ```
 
 ```php
-use LaravelModular\LaravelModular\Contracts\TenantResolver;
-use LaravelModular\LaravelModular\Contracts\TenantModuleVoter;
-use LaravelModular\LaravelModular\Support\Module;
+use Laltu\LaravelModular\Contracts\TenantResolver;
+use Laltu\LaravelModular\Contracts\TenantModuleVoter;
+use Laltu\LaravelModular\Support\Module;
 
 final class CurrentTenantResolver implements TenantResolver
 {

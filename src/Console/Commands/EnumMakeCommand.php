@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace LaravelModular\LaravelModular\Console\Commands;
+namespace Laltu\LaravelModular\Console\Commands;
 
 use Illuminate\Foundation\Console\EnumMakeCommand as BaseEnumMakeCommand;
 

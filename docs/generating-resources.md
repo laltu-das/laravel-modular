@@ -41,6 +41,41 @@ php artisan make:controller CheckoutController --module=Billing
 
 The module must exist first; otherwise the generator fails with `Module [X] does not exist. Run make:module first.`
 
+## Nested classes
+
+Slashes (or backslashes) in the name create sub-namespaces below the conventional directory — the same as Laravel's normal generators:
+
+```bash
+php artisan make:controller Admin/DashboardController --module=Reporting
+# Modules/Reporting/Http/Controllers/Admin/DashboardController.php
+# namespace Modules\Reporting\Http\Controllers\Admin;
+
+php artisan make:model Inventory/StockItem --module=Catalog
+# Modules/Catalog/Models/Inventory/StockItem.php
+# namespace Modules\Catalog\Models\Inventory;
+```
+
+## Views keep their Blade extension
+
+`make:view` honors the base command's `--extension` option, so module views are real Blade templates:
+
+```bash
+php artisan make:view welcome --module=Billing
+# Modules/Billing/resources/views/welcome.blade.php
+
+php artisan make:view invoice.show --module=Billing
+# Modules/Billing/resources/views/invoice/show.blade.php (dots nest into directories)
+```
+
+Reference views with the module's view namespace (`billing::...`):
+
+```php
+return view('billing::invoice.show', ['invoice' => $invoice]);
+
+// @extends / @include resolve the same way inside Blade:
+// @extends('billing::layouts.app')
+```
+
 ## Model companions stay inside the module
 
 `make:model` honors `-m` (migration), `-f` (factory), and `-s` (seeder) — but instead of writing to the application's global `database/` directory, companions are created inside the module:

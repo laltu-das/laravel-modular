@@ -30,13 +30,13 @@ The PSR-4 namespace prefix for modules. A module `Product` gets the namespace `M
 
 **Default:** `null`
 
-Optional class name implementing `LaravelModular\LaravelModular\Contracts\TenantResolver`. Feeds `LaravelModular::tenant()` and the tenant payload of the `ModuleBooting` / `ModuleBooted` events. See [multi-tenancy](multi-tenancy.md).
+Optional class name implementing `Laltu\LaravelModular\Contracts\TenantResolver`. Feeds `LaravelModular::tenant()` and the tenant payload of the `ModuleBooting` / `ModuleBooted` events. See [multi-tenancy](multi-tenancy.md).
 
 ## `tenant_voter`
 
 **Default:** `null`
 
-Optional class name implementing `LaravelModular\LaravelModular\Contracts\TenantModuleVoter`. Decides per tenant whether a module boots; rejected modules are not registered at all. See [multi-tenancy](multi-tenancy.md).
+Optional class name implementing `Laltu\LaravelModular\Contracts\TenantModuleVoter`. Decides per tenant whether a module boots; rejected modules are not registered at all. See [multi-tenancy](multi-tenancy.md).
 
 ## `public_directories`
 
@@ -62,6 +62,46 @@ Per-aspect switches for [auto-discovery](auto-discovery.md); all default to `tru
 | `views` | `{Module}/resources/views` (namespaced by module) |
 
 Explicit `module.php` manifest entries (`providers`, `commands`, `listeners`) are always registered, regardless of these toggles.
+
+## Full annotated example
+
+```php
+<?php
+
+declare(strict_types=1);
+
+return [
+    // Master switch: when false, modules are not discovered or booted at all.
+    'enabled' => true,
+
+    // Every directory directly below this path is a module...
+    'path' => base_path('Modules'),
+
+    // ...namespaced below this prefix (PSR-4, registered at runtime).
+    'namespace' => 'Modules',
+
+    // Optional multi-tenancy hooks (class names, container-resolved).
+    'tenant_resolver' => null,   // Laltu\LaravelModular\Contracts\TenantResolver
+    'tenant_voter' => null,      // Laltu\LaravelModular\Contracts\TenantModuleVoter
+
+    // Top-level module directories other modules may reference.
+    'public_directories' => ['Contracts', 'Events', 'Enums'],
+
+    // Convention-based wiring; explicit module.php entries always win.
+    'auto_discovery' => [
+        'config' => true,
+        'commands' => true,
+        'listeners' => true,
+        'migrations' => true,
+        'observers' => true,
+        'policies' => true,
+        'providers' => true,
+        'routes' => true,
+        'translations' => true,
+        'views' => true,
+    ],
+];
+```
 
 ## Publishing tags
 

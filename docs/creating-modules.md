@@ -77,6 +77,81 @@ Manifest entries are **merged and de-duplicated** with auto-discovered ones, so 
 
 The package registers the configured module namespace (default `Modules\`) with the configured module path at runtime using the registered Composer class loaders. Module factories and seeders are also autoloadable as `{Module}\Database\Factories\` and `{Module}\Database\Seeders\`. No changes to your application's `composer.json` are required.
 
+## A minimal module by hand
+
+You do not need the scaffold command — a module is *just a directory*. The smallest working module is one directory with one route file:
+
+```text
+Modules/Health/
+└── routes/web.php
+```
+
+```php
+<?php
+
+// Modules/Health/routes/web.php
+use Illuminate\Support\Facades\Route;
+
+Route::get('health', fn () => ['status' => 'ok'])->name('health.check');
+```
+
+Run `php artisan module:list` and `Health` shows up, its route registered — zero configuration. Add directories (and classes in them) as the feature grows; the conventions pick everything else up.
+
+## What the scaffold writes for you
+
+`php artisan module:make Blog` produces a ready-to-fill module. The interesting files:
+
+```php
+<?php
+
+// Modules/Blog/Providers/ModuleServiceProvider.php
+declare(strict_types=1);
+
+namespace Modules\Blog\Providers;
+
+use Illuminate\Support\ServiceProvider;
+
+final class ModuleServiceProvider extends ServiceProvider
+{
+    public function register(): void
+    {
+        //
+    }
+
+    public function boot(): void
+    {
+        //
+    }
+}
+```
+
+```php
+<?php
+
+// Modules/Blog/module.php
+declare(strict_types=1);
+
+return [
+    'name' => 'Blog',
+    'providers' => [Modules\Blog\Providers\ModuleServiceProvider::class],
+    // Extra event listeners that are not covered by Listeners/ auto-discovery.
+    // Wildcards such as Modules\Blog\Events\* are supported.
+    'listeners' => [],
+];
+```
+
+```php
+<?php
+
+// Modules/Blog/config/blog.php — available as config('blog.*')
+declare(strict_types=1);
+
+return [
+];
+```
+
+Empty `routes/web.php` and `routes/api.php` stubs are created as well, so you can start routing immediately.
+
 ## Disabling a module
 
 Drop an empty `.disabled` marker file in the module directory (or run `php artisan module:disable Product`) and the module is skipped entirely — see [module administration](module-administration.md).

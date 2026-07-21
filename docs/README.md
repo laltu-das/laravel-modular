@@ -13,6 +13,7 @@ A Spring Boot Modulith-style modular monolith for Laravel: package-by-feature or
 7. [Multi-tenancy](multi-tenancy.md) — `TenantResolver` and `TenantModuleVoter` for per-tenant module activation
 8. [Module boundaries](module-boundaries.md) — public API by convention, `module:boundaries` verification, fixing violations
 9. [Configuration reference](configuration.md) — every option in `config/laravel-modular.php`
+10. [Facade reference](facade-reference.md) — every `LaravelModular` facade method, support classes, and lifecycle events
 
 ## Command overview
 
@@ -32,4 +33,15 @@ composer require laltu/laravel-modular
 php artisan module:make Billing
 php artisan make:controller InvoiceController --module=Billing
 php artisan module:list
+
+php artisan tinker
+>>> LaravelModular::moduleNames();
+=> ["Billing"]
+```
+
+```php
+// Every Feature <-> Feature conversation goes through events:
+use Laltu\LaravelModular\Facades\LaravelModular;
+
+LaravelModular::publish(new Modules\Billing\Events\InvoicePaid(amount: 2500));
 ```

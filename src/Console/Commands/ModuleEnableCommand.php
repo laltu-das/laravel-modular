@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace LaravelModular\LaravelModular\Console\Commands;
+namespace Laltu\LaravelModular\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
-use LaravelModular\LaravelModular\Discovery\ModuleRepository;
-use LaravelModular\LaravelModular\Events\ModuleEnabled;
-use LaravelModular\LaravelModular\Support\Config;
+use Laltu\LaravelModular\Discovery\ModuleRepository;
+use Laltu\LaravelModular\Events\ModuleEnabled;
+use Laltu\LaravelModular\Support\Config;
 
 final class ModuleEnableCommand extends Command
 {

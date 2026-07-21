@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace LaravelModular\LaravelModular\Tests\Fixtures\Tenancy;
+namespace Laltu\LaravelModular\Tests\Fixtures\Tenancy;
 
-use LaravelModular\LaravelModular\Contracts\TenantResolver;
+use Laltu\LaravelModular\Contracts\TenantResolver;
 
 final class FakeTenantResolver implements TenantResolver
 {
