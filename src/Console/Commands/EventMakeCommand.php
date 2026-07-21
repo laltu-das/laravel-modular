@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace LaravelModular\LaravelModular\Console\Commands;
 
-final class EventMakeCommand extends \Illuminate\Foundation\Console\EventMakeCommand
+use Illuminate\Foundation\Console\EventMakeCommand;
+
+final class EventMakeCommand extends EventMakeCommand
 {
     use ModuleAwareGenerator;
 

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace LaravelModular\LaravelModular\Console\Commands;
 
-final class JobMakeCommand extends \Illuminate\Foundation\Console\JobMakeCommand
+use Illuminate\Foundation\Console\JobMakeCommand;
+
+final class JobMakeCommand extends JobMakeCommand
 {
     use ModuleAwareGenerator;
 

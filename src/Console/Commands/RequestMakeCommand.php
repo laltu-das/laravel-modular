@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace LaravelModular\LaravelModular\Console\Commands;
 
-final class RequestMakeCommand extends \Illuminate\Foundation\Console\RequestMakeCommand
+use Illuminate\Foundation\Console\RequestMakeCommand;
+
+final class RequestMakeCommand extends RequestMakeCommand
 {
     use ModuleAwareGenerator;
 

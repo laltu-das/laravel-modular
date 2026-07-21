@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace LaravelModular\LaravelModular\Console\Commands;
 
-final class PolicyMakeCommand extends \Illuminate\Foundation\Console\PolicyMakeCommand
+use Illuminate\Foundation\Console\PolicyMakeCommand;
+
+final class PolicyMakeCommand extends PolicyMakeCommand
 {
     use ModuleAwareGenerator;
 
