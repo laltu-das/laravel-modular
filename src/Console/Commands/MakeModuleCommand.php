@@ -11,7 +11,7 @@ use LaravelModular\LaravelModular\Support\Config;
 
 final class MakeModuleCommand extends Command
 {
-    protected $signature = 'moduler:make-module {name : The module name} {--force : Overwrite an existing module}';
+    protected $signature = 'make:module {name : The module name} {--force : Overwrite an existing module}';
 
     protected $description = 'Create a Laravel-style module';
 

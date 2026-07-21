@@ -41,7 +41,7 @@ trait ModuleAwareGenerator
         $base = rtrim(Config::string('laravel-modular.path', base_path('Modules')), '/').'/'.$module;
 
         if (! is_dir($base)) {
-            throw new InvalidArgumentException("Module [{$module}] does not exist. Run moduler:make-module first.");
+            throw new InvalidArgumentException("Module [{$module}] does not exist. Run make:module first.");
         }
 
         $prefix = trim(Config::string('laravel-modular.namespace', 'Modules'), '\\').'\\'.$module.'\\';

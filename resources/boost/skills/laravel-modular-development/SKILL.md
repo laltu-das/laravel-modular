@@ -25,8 +25,8 @@ php artisan vendor:publish --tag=laravel-modular-config
 ## Create a module
 
 ```bash
-php artisan moduler:make-module School
-php artisan moduler:list
+php artisan make:module School
+php artisan module:list
 ```
 
 A module is created below `Modules/School` by default. Its folders mirror the folders in a Laravel application, such as `Http/Controllers`, `Models`, `Providers`, `Jobs`, `Events`, `database`, `resources`, and `routes`.

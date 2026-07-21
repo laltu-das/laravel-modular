@@ -10,7 +10,7 @@ use LaravelModular\LaravelModular\Support\Module;
 
 final class ModuleListCommand extends Command
 {
-    protected $signature = 'moduler:list';
+    protected $signature = 'module:list';
 
     protected $description = 'List discovered modules';
 
