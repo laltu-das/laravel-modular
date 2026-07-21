@@ -137,37 +137,55 @@ final class LaravelModularServiceProvider extends ServiceProvider
         }
 
         $this->publishes([__DIR__.'/../config/laravel-modular.php' => config_path('laravel-modular.php')], ['laravel-modular', 'laravel-modular-config']);
+
+        // Core commands (always available)
         $this->commands([
             LaravelModularCommand::class,
             MakeModuleCommand::class,
             ModuleListCommand::class,
-            CastMakeCommand::class,
-            ChannelMakeCommand::class,
-            ComponentMakeCommand::class,
-            ConsoleMakeCommand::class,
-            ControllerMakeCommand::class,
-            EnumMakeCommand::class,
-            EventMakeCommand::class,
-            ExceptionMakeCommand::class,
-            FactoryMakeCommand::class,
-            InterfaceMakeCommand::class,
-            JobMakeCommand::class,
-            ListenerMakeCommand::class,
-            MailMakeCommand::class,
-            MiddlewareMakeCommand::class,
-            MigrationMakeCommand::class,
-            ModelMakeCommand::class,
-            NotificationMakeCommand::class,
-            ObserverMakeCommand::class,
-            PolicyMakeCommand::class,
-            ProviderMakeCommand::class,
-            RequestMakeCommand::class,
-            ResourceMakeCommand::class,
-            RuleMakeCommand::class,
-            ScopeMakeCommand::class,
-            SeederMakeCommand::class,
-            TestMakeCommand::class,
-            ViewMakeCommand::class,
         ]);
+
+        // Generator commands — only registered when the corresponding Laravel base class exists.
+        // Each entry maps our command class to the Laravel base class it extends.
+        $generatorCommands = [
+            CastMakeCommand::class => 'Illuminate\Foundation\Console\CastMakeCommand',
+            ChannelMakeCommand::class => 'Illuminate\Foundation\Console\ChannelMakeCommand',
+            ComponentMakeCommand::class => 'Illuminate\Foundation\Console\ComponentMakeCommand',
+            ConsoleMakeCommand::class => 'Illuminate\Foundation\Console\ConsoleMakeCommand',
+            ControllerMakeCommand::class => 'Illuminate\Routing\Console\ControllerMakeCommand',
+            EnumMakeCommand::class => 'Illuminate\Foundation\Console\EnumMakeCommand',
+            EventMakeCommand::class => 'Illuminate\Foundation\Console\EventMakeCommand',
+            ExceptionMakeCommand::class => 'Illuminate\Foundation\Console\ExceptionMakeCommand',
+            FactoryMakeCommand::class => 'Illuminate\Database\Console\Factories\FactoryMakeCommand',
+            InterfaceMakeCommand::class => 'Illuminate\Foundation\Console\InterfaceMakeCommand',
+            JobMakeCommand::class => 'Illuminate\Foundation\Console\JobMakeCommand',
+            ListenerMakeCommand::class => 'Illuminate\Foundation\Console\ListenerMakeCommand',
+            MailMakeCommand::class => 'Illuminate\Foundation\Console\MailMakeCommand',
+            MiddlewareMakeCommand::class => 'Illuminate\Routing\Console\MiddlewareMakeCommand',
+            MigrationMakeCommand::class => 'Illuminate\Database\Console\Migrations\MigrateMakeCommand',
+            ModelMakeCommand::class => 'Illuminate\Foundation\Console\ModelMakeCommand',
+            NotificationMakeCommand::class => 'Illuminate\Foundation\Console\NotificationMakeCommand',
+            ObserverMakeCommand::class => 'Illuminate\Foundation\Console\ObserverMakeCommand',
+            PolicyMakeCommand::class => 'Illuminate\Foundation\Console\PolicyMakeCommand',
+            ProviderMakeCommand::class => 'Illuminate\Foundation\Console\ProviderMakeCommand',
+            RequestMakeCommand::class => 'Illuminate\Foundation\Console\RequestMakeCommand',
+            ResourceMakeCommand::class => 'Illuminate\Foundation\Console\ResourceMakeCommand',
+            RuleMakeCommand::class => 'Illuminate\Foundation\Console\RuleMakeCommand',
+            ScopeMakeCommand::class => 'Illuminate\Foundation\Console\ScopeMakeCommand',
+            SeederMakeCommand::class => 'Illuminate\Database\Console\Seeds\SeederMakeCommand',
+            TestMakeCommand::class => 'Illuminate\Foundation\Console\TestMakeCommand',
+            ViewMakeCommand::class => 'Illuminate\Foundation\Console\ViewMakeCommand',
+        ];
+
+        $availableCommands = [];
+        foreach ($generatorCommands as $command => $baseClass) {
+            if (class_exists($baseClass)) {
+                $availableCommands[] = $command;
+            }
+        }
+
+        if ($availableCommands !== []) {
+            $this->commands($availableCommands);
+        }
     }
 }
