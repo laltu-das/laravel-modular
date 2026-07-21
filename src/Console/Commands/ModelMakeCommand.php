@@ -14,7 +14,7 @@ final class ModelMakeCommand extends BaseModelMakeCommand
 
     protected function moduleDirectory(): string
     {
-        return 'Infrastructure/Persistence/Models';
+        return 'Models';
     }
 
     /**
@@ -106,7 +106,7 @@ declare(strict_types=1);
 
 namespace {$namespace}\Database\Factories;
 
-use {$namespace}\Infrastructure\Persistence\Models\{$name};
+use {$namespace}\Models\{$name};
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /** @extends Factory<{$name}> */
@@ -165,11 +165,11 @@ PHP;
 
     private function moduleNamespace(): string
     {
-        return trim(Config::string('laravel-modular.namespace', 'Domains'), '\\').'\\'.Str::studly($this->moduleOption());
+        return trim(Config::string('laravel-modular.namespace', 'Modules'), '\\').'\\'.Str::studly($this->moduleOption());
     }
 
     private function modulePath(string $path): string
     {
-        return rtrim(Config::string('laravel-modular.path', base_path('Domains')), '/').'/'.Str::studly($this->moduleOption()).'/'.$path;
+        return rtrim(Config::string('laravel-modular.path', base_path('Modules')), '/').'/'.Str::studly($this->moduleOption()).'/'.$path;
     }
 }

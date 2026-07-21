@@ -12,6 +12,6 @@ final class EnumMakeCommand extends BaseEnumMakeCommand
 
     protected function moduleDirectory(): string
     {
-        return 'Domain/Enums';
+        return 'Enums';
     }
 }

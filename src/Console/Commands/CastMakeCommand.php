@@ -12,6 +12,6 @@ final class CastMakeCommand extends BaseCastMakeCommand
 
     protected function moduleDirectory(): string
     {
-        return 'Infrastructure/Casts';
+        return 'Casts';
     }
 }

@@ -12,6 +12,6 @@ final class ConsoleMakeCommand extends BaseConsoleMakeCommand
 
     protected function moduleDirectory(): string
     {
-        return 'Application/Commands';
+        return 'Console/Commands';
     }
 }

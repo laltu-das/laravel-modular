@@ -12,6 +12,6 @@ final class ExceptionMakeCommand extends BaseExceptionMakeCommand
 
     protected function moduleDirectory(): string
     {
-        return 'Infrastructure/Exceptions';
+        return 'Exceptions';
     }
 }

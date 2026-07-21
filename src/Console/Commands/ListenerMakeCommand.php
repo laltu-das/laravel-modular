@@ -12,6 +12,6 @@ final class ListenerMakeCommand extends BaseListenerMakeCommand
 
     protected function moduleDirectory(): string
     {
-        return 'Application/Listeners';
+        return 'Listeners';
     }
 }

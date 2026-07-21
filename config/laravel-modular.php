@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 return [
     'placeholder' => 'default',
-    'path' => base_path('Domains'),
-    'namespace' => 'Domains',
+    'path' => base_path('Modules'),
+    'namespace' => 'Modules',
     'enabled' => true,
     'tenant_resolver' => null,
-    'public_directories' => ['Application', 'Domain', 'Contracts'],
 ];

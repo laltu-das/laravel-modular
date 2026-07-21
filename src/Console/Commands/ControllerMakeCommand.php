@@ -12,6 +12,6 @@ final class ControllerMakeCommand extends BaseControllerMakeCommand
 
     protected function moduleDirectory(): string
     {
-        return 'Infrastructure/Http/Controllers';
+        return 'Http/Controllers';
     }
 }

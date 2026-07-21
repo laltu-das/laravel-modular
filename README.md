@@ -1,6 +1,6 @@
 # Laravel Modular
 
-A lightweight, convention-first modular-monolith package for Laravel 12/13. Organize code by business capability, keep domain internals isolated, and let each module own its routes, migrations, providers, listeners and resources.
+A lightweight, convention-first modular package for Laravel 12 and 13. Keep each feature in its own module while using the folders, namespaces, and generators Laravel developers already know.
 
 ## Installation
 
@@ -16,79 +16,77 @@ php artisan moduler:make-module School
 php artisan moduler:list
 ```
 
-Modules live in `Domains/` by default and use a DDD-friendly layout:
+Modules live in `Modules/` by default. A module uses the same layout as a Laravel application; the module directory is the equivalent of the application's `app` directory:
 
 ```text
-Domains/School/
-├── Application/{Commands,Queries,Listeners,Policies}
-├── Contracts/                         # convention-based public API
-├── Domain/{Entities,Enums,Events,Services,ValueObjects}
-├── Infrastructure/
-│   ├── Broadcasting/
-│   ├── Casts/
-│   ├── Exceptions/
-│   ├── Http/{Controllers,Middleware,Requests,Resources}
-│   ├── Jobs/
-│   ├── Mail/
-│   ├── Notifications/
-│   ├── Observers/
-│   ├── Persistence/{Models,Scopes}
-│   ├── Providers/ModuleServiceProvider.php
-│   ├── Rules/
-│   └── View/Components/
-├── database/{migrations,factories,seeders}
-├── resources/{views,lang}
+Modules/School/
+├── Broadcasting/
+├── Casts/
+├── Console/Commands/
+├── Contracts/
+├── Enums/
+├── Events/
+├── Exceptions/
+├── Http/{Controllers,Middleware,Requests,Resources}
+├── Jobs/
+├── Listeners/
+├── Mail/
+├── Models/Scopes/
+├── Notifications/
+├── Observers/
+├── Policies/
+├── Providers/ModuleServiceProvider.php
+├── Rules/
+├── View/Components/
+├── database/{factories,migrations,seeders}
+├── resources/{lang,views}
 ├── routes/{web,api}.php
 ├── tests/
 └── module.php
 ```
 
-The package registers the `Domains\\` PSR-4 prefix at runtime. The root path and namespace are configurable.
+The module root and namespace are configurable. The package registers the configured namespace with the module root at runtime, so a generated `School` controller is available as `Modules\School\Http\Controllers\SchoolController`.
 
 ## Generate resources in a module
 
-All standard Laravel generators gain a `--module` option. When `--module` is omitted, the default Laravel behavior is unchanged.
-
-### Supported generators
+All supported Laravel generators gain a `--module` option. Without `--module`, Laravel's normal generator behavior is unchanged.
 
 | Command | Module directory |
 |---|---|
-| `make:cast` | `Infrastructure/Casts` |
-| `make:channel` | `Infrastructure/Broadcasting` |
-| `make:command` | `Application/Commands` |
-| `make:component` | `Infrastructure/View/Components` |
-| `make:controller` | `Infrastructure/Http/Controllers` |
-| `make:enum` | `Domain/Enums` |
-| `make:event` | `Domain/Events` |
-| `make:exception` | `Infrastructure/Exceptions` |
+| `make:cast` | `Casts` |
+| `make:channel` | `Broadcasting` |
+| `make:command` | `Console/Commands` |
+| `make:component` | `View/Components` |
+| `make:controller` | `Http/Controllers` |
+| `make:enum` | `Enums` |
+| `make:event` | `Events` |
+| `make:exception` | `Exceptions` |
 | `make:factory` | `database/factories` |
 | `make:interface` | `Contracts` |
-| `make:job` | `Infrastructure/Jobs` |
-| `make:listener` | `Application/Listeners` |
-| `make:mail` | `Infrastructure/Mail` |
-| `make:middleware` | `Infrastructure/Http/Middleware` |
-| `make:migration` | `database/migrations` |
-| `make:model` | `Infrastructure/Persistence/Models` |
-| `make:notification` | `Infrastructure/Notifications` |
-| `make:observer` | `Infrastructure/Observers` |
-| `make:policy` | `Application/Policies` |
-| `make:provider` | `Infrastructure/Providers` |
-| `make:request` | `Infrastructure/Http/Requests` |
-| `make:resource` | `Infrastructure/Http/Resources` |
-| `make:rule` | `Infrastructure/Rules` |
-| `make:scope` | `Infrastructure/Persistence/Scopes` |
+| `make:job` | `Jobs` |
+| `make:listener` | `Listeners` |
+| `make:mail` | `Mail` |
+| `make:middleware` | `Http/Middleware` |
+| `make:model` | `Models` |
+| `make:notification` | `Notifications` |
+| `make:observer` | `Observers` |
+| `make:policy` | `Policies` |
+| `make:provider` | `Providers` |
+| `make:request` | `Http/Requests` |
+| `make:resource` | `Http/Resources` |
+| `make:rule` | `Rules` |
+| `make:scope` | `Models/Scopes` |
 | `make:seeder` | `database/seeders` |
 | `make:test` | `tests` |
 | `make:view` | `resources/views` |
 
-### Category module
+### Example
 
 ```bash
 php artisan moduler:make-module Category
 php artisan make:controller CategoryController --module=Category
 php artisan make:model Category --module=Category -m -f -s
 php artisan make:request CreateCategoryRequest --module=Category
-php artisan make:request UpdateCategoryRequest --module=Category
 php artisan make:job ProcessCategoryImport --module=Category
 php artisan make:event CategoryCreated --module=Category
 php artisan make:policy CategoryPolicy --module=Category
@@ -98,62 +96,41 @@ php artisan make:observer CategoryObserver --module=Category
 php artisan make:mail CategorySummaryMail --module=Category
 ```
 
-### Product module
+For a module model, `-m`, `-f`, and `-s` place the migration, factory, and seeder in that module's `database/` directories instead of the application's global database directories.
 
-```bash
-php artisan moduler:make-module Product
-php artisan make:controller ProductController --module=Product
-php artisan make:model Product --module=Product -m -f -s
-php artisan make:request CreateProductRequest --module=Product
-php artisan make:request UpdateProductRequest --module=Product
-php artisan make:job SyncProductStock --module=Product
-php artisan make:event ProductCreated --module=Product
-php artisan make:event ProductStockUpdated --module=Product
-php artisan make:policy ProductPolicy --module=Product
-php artisan make:enum ProductStatus --module=Product
-php artisan make:interface ProductRepository --module=Product
-php artisan make:exception ProductNotFoundException --module=Product
-```
+## Module discovery
 
-Controllers, requests, jobs, models, middleware, resources and observers are placed under Infrastructure; events and enums under Domain; policies, commands and listeners under Application. Existing generator behavior is unchanged when `--module` is omitted.
-
-For module models, `-m`, `-f`, and `-s` place the migration, factory, and seeder in that module's `database/` directories instead of the application's global database directory.
-
-## Auto-discovery
-
-Every enabled directory directly below `Domains/` is discovered. Add a `.disabled` file to disable one. For each module Laravel Modular automatically loads:
+Every enabled directory directly below `Modules/` is discovered. Add a `.disabled` file to disable a module. For each enabled module, Laravel Modular automatically loads:
 
 - `routes/web.php` and `routes/api.php`
 - `database/migrations`
 - namespaced views (`school::...`) and translations
-- providers, commands and event listeners declared by `module.php`
+- providers, commands, and event listeners declared by `module.php`
+
+A generated `module.php` looks like this:
 
 ```php
 return [
     'name' => 'School',
-    'providers' => [Domains\School\Infrastructure\Providers\ModuleServiceProvider::class],
-    'commands' => [],
+    'providers' => [Modules\School\Providers\ModuleServiceProvider::class],
     'listeners' => [
         StudentEnrolled::class => [SendWelcomeMessage::class],
     ],
 ];
 ```
 
-## Events and module boundaries
+Use regular Laravel events and listeners inside modules. Modules can listen to each other's events through the `listeners` declaration without introducing a separate event abstraction.
 
-Depend on `ModuleEventBus` rather than another module's implementation:
+## Configuration
 
-```php
-use LaravelModular\LaravelModular\Contracts\ModuleEventBus;
+The published `config/laravel-modular.php` file contains the following options:
 
-$bus->publish(new StudentEnrolled($studentId));
-```
+- `path`: the module directory, `base_path('Modules')` by default
+- `namespace`: the module namespace prefix, `Modules` by default
+- `enabled`: enable or disable module discovery
+- `tenant_resolver`: optional class implementing `TenantResolver`
 
-`Contracts`, `Application`, and `Domain` are public by convention. `LaravelModular::isPublic($class)` can be used by architecture tests to reject dependencies on another module's Infrastructure classes. Configure `public_directories` to tighten that policy.
-
-## Multi-tenancy
-
-Implement `TenantResolver` and set its class in `tenant_resolver` config. The current tenant is included in `ModuleBooting` and `ModuleBooted`, allowing tenant-aware modules or existing TenantContext implementations to initialize without coupling this package to a tenancy vendor.
+The optional tenant resolver is used when dispatching `ModuleBooting` and `ModuleBooted` lifecycle events. It lets an application initialize modules for its current tenant without coupling the package to a tenancy package.
 
 ```php
 use LaravelModular\LaravelModular\Contracts\TenantResolver;
