@@ -21,8 +21,8 @@ final class Config
     }
 
     /**
-     * @param  array<int, string>  $default
-     * @return array<int, string>
+     * @param  list<string>  $default
+     * @return list<string>
      */
     public static function stringList(string $key, array $default): array
     {

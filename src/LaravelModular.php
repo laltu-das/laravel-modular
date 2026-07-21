@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LaravelModular\LaravelModular;
 
+use Closure;
 use Illuminate\Contracts\Events\Dispatcher;
 use LaravelModular\LaravelModular\Contracts\TenantModuleVoter;
 use LaravelModular\LaravelModular\Discovery\ModuleRepository;
@@ -89,10 +90,12 @@ final readonly class LaravelModular
     }
 
     /**
-     * Subscribe a listener (class name or callable) to one or more events.
+     * Subscribe a listener (class name or closure) to one or more events.
      * Wildcard patterns such as `Modules\Billing\Events\*` are supported.
+     *
+     * @param  string|array<int, string>  $events
      */
-    public function listen(array|string $events, callable|string|null $listener = null): void
+    public function listen(string|array $events, Closure|string|null $listener = null): void
     {
         $this->events->listen($events, $listener);
     }

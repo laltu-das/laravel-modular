@@ -371,9 +371,7 @@ final class LaravelModularServiceProvider extends ServiceProvider
 
         foreach ($listeners as $event => $handlers) {
             foreach ($handlers as $handler) {
-                $target = str_contains($handler, '@') ? Str::before($handler, '@') : $handler;
-
-                if (class_exists($target)) {
+                if (class_exists($handler)) {
                     $this->app->make(Dispatcher::class)->listen($event, $handler);
                 }
             }
