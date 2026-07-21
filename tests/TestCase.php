@@ -15,4 +15,10 @@ abstract class TestCase extends Orchestra
             LaravelModularServiceProvider::class,
         ];
     }
+
+    protected function getEnvironmentSetUp($app): void
+    {
+        $app['config']->set('laravel-modular.path', __DIR__.'/Fixtures/Modules');
+        $app['config']->set('laravel-modular.namespace', 'Modules');
+    }
 }

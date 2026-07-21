@@ -6,7 +6,7 @@ namespace LaravelModular\LaravelModular\Support;
 
 final readonly class Module
 {
-    public function __construct(public string $name, public string $path, public string $namespace)
+    public function __construct(public string $name, public string $path, public string $namespace, public bool $disabled = false)
     {
         //
     }

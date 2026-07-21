@@ -1,6 +1,17 @@
 # Laravel Modular
 
-A lightweight, convention-first modular package for Laravel 12 and 13. Keep each feature in its own module while using the folders, namespaces, and generators Laravel developers already know.
+A Spring Boot Modulith-style modular monolith for Laravel 12 and 13. Organize your application by feature — package-by-feature, like Spring — with convention-based auto-discovery, low-coupling event-driven communication, per-tenant module activation, and verifiable module boundaries.
+
+## What you get
+
+| Spring Boot / Modulith | Laravel Modular |
+|---|---|
+| Package-by-feature | A directory per module below `Modules/` |
+| `@ComponentScan` / auto-configuration | Auto-discovery of providers, commands, listeners, policies, observers, routes, migrations, config, views, translations |
+| Application events (`@EventListener`) | Module listeners auto-wired from the `handle()` type-hint, wildcard listeners, manifest listeners |
+| `@Profile` (per-environment beans) | Per-tenant module activation via `TenantModuleVoter` |
+| `ApplicationModules::verify()` | `php artisan module:boundaries` — public API by convention, everything else internal |
+| `spring-boot-maven-plugin` scaffolding | `php artisan module:make` (aliases `make:module`, `moduler:make-module`) plus `--module` on every Laravel generator |
 
 ## Installation
 
@@ -12,8 +23,12 @@ php artisan vendor:publish --tag=laravel-modular-config
 ## Create a module
 
 ```bash
+php artisan module:make School
+# aliases:
 php artisan make:module School
-php artisan module:list
+php artisan moduler:make-module School
+
+php artisan module:list // lists each module and its Enabled/Disabled status
 ```
 
 Modules live in `Modules/` by default. A module uses the same layout as a Laravel application; the module directory is the equivalent of the application's `app` directory:
@@ -22,20 +37,21 @@ Modules live in `Modules/` by default. A module uses the same layout as a Larave
 Modules/School/
 ├── Broadcasting/
 ├── Casts/
-├── Console/Commands/
-├── Contracts/
-├── Enums/
-├── Events/
+├── config/school.php          merged into config('school.*')
+├── Console/Commands/          auto-registered in console
+├── Contracts/                 public API: interfaces other modules may use
+├── Enums/                     public API
+├── Events/                    public API: cross-module events
 ├── Exceptions/
 ├── Http/{Controllers,Middleware,Requests,Resources}
 ├── Jobs/
-├── Listeners/
+├── Listeners/                 auto-wired from the handle() type-hint
 ├── Mail/
 ├── Models/Scopes/
 ├── Notifications/
-├── Observers/
-├── Policies/
-├── Providers/ModuleServiceProvider.php
+├── Observers/                 {Model}Observer => Models/{Model} (auto)
+├── Policies/                  {Model}Policy => Models/{Model} (auto)
+├── Providers/                 *ServiceProvider (auto-registered)
 ├── Rules/
 ├── View/Components/
 ├── database/{factories,migrations,seeders}
@@ -46,6 +62,55 @@ Modules/School/
 ```
 
 The module root and namespace are configurable. The package registers the configured namespace with the module root at runtime, so a generated `School` controller is available as `Modules\School\Http\Controllers\SchoolController`.
+
+## Auto-discovery (convention over configuration)
+
+For every enabled module, Laravel Modular automatically wires the following — no `module.php` entries needed:
+
+| Convention | What happens |
+|---|---|
+| `config/*.php` | merged into the config repository, keyed by file name |
+| `Providers/*ServiceProvider.php` | registered with the full provider lifecycle (`register` + `boot`) |
+| `Console/Commands/*Command.php` | registered as Artisan commands (console only) |
+| `Listeners/*.php` | event inferred from the `handle()` / `__invoke()` type-hint, then subscribed |
+| `Policies/{Model}Policy.php` | `Gate::policy(Models\{Model}, {Model}Policy)` |
+| `Observers/{Model}Observer.php` | `Models\{Model}::observe({Model}Observer)` |
+| `routes/web.php`, `routes/api.php` | loaded as module routes |
+| `database/migrations` | registered with the migrator |
+| `resources/views`, `resources/lang` | loaded namespaced by module (`school::welcome`, `school::messages.*`) |
+
+Module service providers are registered during the container's registration phase, so they behave exactly like any other provider — their own `boot()` runs and they can rely on the full lifecycle.
+
+Every aspect can be turned off individually:
+
+```php
+// config/laravel-modular.php
+'auto_discovery' => [
+    'config' => true,
+    'commands' => true,
+    'listeners' => true,
+    'migrations' => true,
+    'observers' => true,
+    'policies' => true,
+    'providers' => true,
+    'routes' => true,
+    'translations' => true,
+    'views' => true,
+],
+```
+
+`module.php` remains for explicit declarations; manifest entries are merged and de-duplicated with auto-discovered ones:
+
+```php
+return [
+    'name' => 'School',
+    'providers' => [Modules\School\Providers\ModuleServiceProvider::class],
+    'listeners' => [
+        StudentEnrolled::class => [SendWelcomeMessage::class],
+        'Modules\Billing\Events\*' => [RecalculateAccountBalance::class], // wildcards work
+    ],
+];
+```
 
 ## Generate resources in a module
 
@@ -83,7 +148,7 @@ All supported Laravel generators gain a `--module` option. Without `--module`, L
 ### Example
 
 ```bash
-php artisan make:module Category
+php artisan module:make Category
 php artisan make:controller CategoryController --module=Category
 php artisan make:model Category --module=Category -m -f -s
 php artisan make:request CreateCategoryRequest --module=Category
@@ -98,28 +163,106 @@ php artisan make:mail CategorySummaryMail --module=Category
 
 For a module model, `-m`, `-f`, and `-s` place the migration, factory, and seeder in that module's `database/` directories instead of the application's global database directories.
 
-## Module discovery
+## Event-driven communication between modules
 
-Every enabled directory directly below `Modules/` is discovered. Add a `.disabled` file to disable a module. For each enabled module, Laravel Modular automatically loads:
+Modules stay decoupled by talking through events — never through each other's internals:
 
-- `routes/web.php` and `routes/api.php`
-- `database/migrations`
-- namespaced views (`school::...`) and translations
-- providers, commands, and event listeners declared by `module.php`
-
-A generated `module.php` looks like this:
+- Events that are part of a module's **public API** live in `{Module}/Events/`.
+- Listeners that **react** to another module live in the consuming module's `Listeners/` directory and are auto-wired.
+- Publish with the `LaravelModular` facade (or plain `event()`):
 
 ```php
-return [
-    'name' => 'School',
-    'providers' => [Modules\School\Providers\ModuleServiceProvider::class],
-    'listeners' => [
-        StudentEnrolled::class => [SendWelcomeMessage::class],
-    ],
-];
+use LaravelModular\LaravelModular\Facades\LaravelModular;
+use Modules\Billing\Events\InvoicePaid;
+
+LaravelModular::publish(new InvoicePaid(amount: 2500));
+
+// subscribe at runtime, wildcards included:
+LaravelModular::listen('Modules\Billing\Events\*', AuditBillingActivity::class);
 ```
 
-Use regular Laravel events and listeners inside modules. Modules can listen to each other's events through the `listeners` declaration without introducing a separate event abstraction.
+```php
+// Modules/Catalog/Listeners/ReleaseInventory.php
+final class ReleaseInventory
+{
+    public function handle(InvoicePaid $event): void
+    {
+        // Catalog reacts; Billing does not know Catalog exists.
+    }
+}
+```
+
+## Module lifecycle administration
+
+```bash
+php artisan module:disable Billing  # drops a .disabled marker; module is skipped
+php artisan module:enable Billing   # removes the marker
+php artisan module:list             # shows Enabled/Disabled status per module
+```
+
+`module:enable` and `module:disable` dispatch `ModuleEnabled` / `ModuleDisabled` events. Boot lifecycle events `ModuleBooting` / `ModuleBooted` fire per module and carry the current tenant.
+
+## Multi-tenancy
+
+Two hooks integrate the package with your existing `TenantContext` patterns:
+
+1. **`tenant_resolver`**: a class implementing `TenantResolver`. It feeds the tenant payload of `ModuleBooting` / `ModuleBooted` and `LaravelModular::tenant()`.
+2. **`tenant_voter`**: a class implementing `TenantModuleVoter`, deciding per tenant whether a module boots — like Spring profiles, but per tenant. Rejected modules are not registered at all: no providers, routes, listeners, or commands.
+
+```php
+// config/laravel-modular.php
+'tenant_resolver' => App\Tenancy\CurrentTenantResolver::class,
+'tenant_voter' => App\Tenancy\TenantModuleVoter::class,
+```
+
+```php
+use LaravelModular\LaravelModular\Contracts\TenantResolver;
+use LaravelModular\LaravelModular\Contracts\TenantModuleVoter;
+use LaravelModular\LaravelModular\Support\Module;
+
+final class CurrentTenantResolver implements TenantResolver
+{
+    public function current(): mixed
+    {
+        return app(TenantContext::class)->tenant();
+    }
+}
+
+final class TenantModuleVoter implements TenantModuleVoter
+{
+    public function allows(Module $module, mixed $tenant): bool
+    {
+        // e.g. plan-based activation: tenant->plan includes the POS feature
+        return in_array(strtolower($module->name), $tenant?->modules ?? [], true);
+    }
+}
+```
+
+At runtime, `LaravelModular::modules()`, `moduleNames()`, `has()`, and `module()` only expose modules enabled for the current tenant.
+
+## Module boundaries
+
+Convention-based, Spring Modulith `verify()` style:
+
+- A module's **public API** = its top-level `Contracts/`, `Events/`, and `Enums/` directories (configurable via `public_directories`).
+- **Everything else is internal by default** — other modules must not reference it.
+- Verify with:
+
+```bash
+php artisan module:boundaries                # exits non-zero on violations (CI-friendly)
+php artisan module:boundaries --module=Billing
+```
+
+```text
+Module boundary violations detected (1):
++-----------+--------------------------------+----------------------------------------------+
+| Module    | File                           | References                                   |
++-----------+--------------------------------+----------------------------------------------+
+| Reporting | Jobs/RecalculateLedger.php     | Modules\Invoicing\Internal\Ledger\IncomeLedger |
++-----------+--------------------------------+----------------------------------------------+
+```
+
+Expose more of a module deliberately by adding directories to `public_directories` (e.g. add `Http` to let other modules route to its controllers), or move shared code into `Contracts/` / `Events/`.
 
 ## Configuration
 
@@ -129,20 +272,11 @@ The published `config/laravel-modular.php` file contains the following options:
 - `namespace`: the module namespace prefix, `Modules` by default
 - `enabled`: enable or disable module discovery
 - `tenant_resolver`: optional class implementing `TenantResolver`
+- `tenant_voter`: optional class implementing `TenantModuleVoter`
+- `public_directories`: top-level module directories considered public API
+- `auto_discovery.*`: per-aspect auto-discovery switches
 
 The optional tenant resolver is used when dispatching `ModuleBooting` and `ModuleBooted` lifecycle events. It lets an application initialize modules for its current tenant without coupling the package to a tenancy package.
-
-```php
-use LaravelModular\LaravelModular\Contracts\TenantResolver;
-
-final class CurrentTenantResolver implements TenantResolver
-{
-    public function current(): mixed
-    {
-        return app(TenantContext::class)->tenant();
-    }
-}
-```
 
 ## License
 

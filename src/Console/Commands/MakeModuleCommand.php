@@ -11,13 +11,15 @@ use LaravelModular\LaravelModular\Support\Config;
 
 final class MakeModuleCommand extends Command
 {
-    protected $signature = 'make:module {name : The module name} {--force : Overwrite an existing module}';
+    protected $signature = 'module:make {name : The module name} {--force : Overwrite an existing module}';
 
-    protected $description = 'Create a Laravel-style module';
+    protected $description = 'Scaffold a new module (aliases: make:module, moduler:make-module)';
 
     public function __construct(private readonly Filesystem $files)
     {
         parent::__construct();
+
+        $this->setAliases(['make:module', 'moduler:make-module']);
     }
 
     public function handle(): int
@@ -41,6 +43,7 @@ final class MakeModuleCommand extends Command
         $this->files->put($root.'/module.php', $this->manifest($name, $namespace));
         $this->files->put($root.'/routes/web.php', $this->webRoutes());
         $this->files->put($root.'/routes/api.php', $this->apiRoutes());
+        $this->files->put($root.'/config/'.Str::kebab($name).'.php', $this->moduleConfig());
         $this->components->info("Module [{$name}] created successfully.");
 
         return self::SUCCESS;
@@ -84,6 +87,8 @@ declare(strict_types=1);
 return [
     'name' => '{{ name }}',
     'providers' => [{{ namespace }}\Providers\ModuleServiceProvider::class],
+    // Extra event listeners that are not covered by Listeners/ auto-discovery.
+    // Wildcards such as {{ namespace }}\Events\* are supported.
     'listeners' => [],
 ];
 PHP;
@@ -119,12 +124,27 @@ PHP;
         return $routes.PHP_EOL;
     }
 
+    private function moduleConfig(): string
+    {
+        return <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+// Merged into Laravel's config repository under this file's name
+// (e.g. a file named billing.php is read via config('billing.option')).
+return [
+];
+PHP.PHP_EOL;
+    }
+
     /** @return list<string> */
     private function directories(): array
     {
         return [
             'Broadcasting',
             'Casts',
+            'config',
             'Console/Commands',
             'Contracts',
             'Enums',

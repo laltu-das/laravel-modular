@@ -75,6 +75,7 @@
             "vendor/bin/pest --type-coverage --min=100"
         ],
         "test:unit": [
+            "@php -r \"fwrite(STDERR,'::warning::pest-step-probe'.PHP_EOL);\"",
             "vendor/bin/pest --parallel"
         ],
         "test": [
