@@ -13,6 +13,25 @@ A Spring Boot Modulith-style modular monolith for Laravel 12 and 13. Organize yo
 | `ApplicationModules::verify()` | `php artisan module:boundaries` — public API by convention, everything else internal |
 | `spring-boot-maven-plugin` scaffolding | `php artisan module:make` (aliases `make:module`, `moduler:make-module`) plus `--module` on every Laravel generator |
 
+## Documentation
+
+This README covers the essentials. Detailed guides live in the [docs](docs) directory:
+
+- [Installation & setup](docs/installation.md)
+- [Creating modules](docs/creating-modules.md)
+- [Auto-discovery](docs/auto-discovery.md)
+- [Generating resources in a module](docs/generating-resources.md)
+- [Event-driven communication](docs/event-driven-communication.md)
+- [Module administration](docs/module-administration.md)
+- [Multi-tenancy](docs/multi-tenancy.md)
+- [Module boundaries](docs/module-boundaries.md)
+- [Configuration reference](docs/configuration.md)
+
+## Requirements
+
+- PHP 8.3 or higher
+- Laravel 12.x or 13.x
+
 ## Installation
 
 ```bash
@@ -278,6 +297,33 @@ The published `config/laravel-modular.php` file contains the following options:
 
 The optional tenant resolver is used when dispatching `ModuleBooting` and `ModuleBooted` lifecycle events. It lets an application initialize modules for its current tenant without coupling the package to a tenancy package.
 
+## Testing
+
+```bash
+composer test          # the full suite: phpstan, lint check, type coverage, pest
+composer analyse       # static analysis only
+composer lint          # fix code style with Pint
+composer lint:check    # verify code style without changing files
+composer test:types    # type coverage
+composer test:unit     # Pest tests
+```
+
+## Changelog
+
+Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
+
+## Contributing
+
+Please see [CONTRIBUTING](.github/CONTRIBUTING.md) for details.
+
+## Security
+
+Please review [our security policy](.github/SECURITY.md) on how to report security vulnerabilities.
+
+## Credits
+
+- [laltu](https://github.com/laltu-das)
+
 ## License
 
-MIT
+The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
