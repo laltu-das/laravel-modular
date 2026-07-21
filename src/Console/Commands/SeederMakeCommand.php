@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace LaravelModular\LaravelModular\Console\Commands;
 
-use Illuminate\Foundation\Console\SeederMakeCommand as BaseSeederMakeCommand;
+use Illuminate\Database\Console\Seeds\SeederMakeCommand as BaseSeederMakeCommand;
 
 final class SeederMakeCommand extends BaseSeederMakeCommand
 {

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace LaravelModular\LaravelModular\Console\Commands;
 
-use Illuminate\Foundation\Console\MiddlewareMakeCommand as BaseMiddlewareMakeCommand;
+use Illuminate\Routing\Console\MiddlewareMakeCommand as BaseMiddlewareMakeCommand;
 
 final class MiddlewareMakeCommand extends BaseMiddlewareMakeCommand
 {

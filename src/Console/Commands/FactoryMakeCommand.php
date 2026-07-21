@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace LaravelModular\LaravelModular\Console\Commands;
 
-use Illuminate\Foundation\Console\FactoryMakeCommand as BaseFactoryMakeCommand;
+use Illuminate\Database\Console\Factories\FactoryMakeCommand as BaseFactoryMakeCommand;
 
 final class FactoryMakeCommand extends BaseFactoryMakeCommand
 {
