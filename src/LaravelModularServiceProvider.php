@@ -155,34 +155,34 @@ final class LaravelModularServiceProvider extends ServiceProvider
             RequestMakeCommand::class,
         ]);
 
-        // New generator commands with class_exists checks
+        // New generator commands - use string class names to avoid autoloading issues
         $newCommands = [
-            CastMakeCommand::class => 'Illuminate\Foundation\Console\CastMakeCommand',
-            ChannelMakeCommand::class => 'Illuminate\Foundation\Console\ChannelMakeCommand',
-            ComponentMakeCommand::class => 'Illuminate\Foundation\Console\ComponentMakeCommand',
-            ConsoleMakeCommand::class => 'Illuminate\Foundation\Console\ConsoleMakeCommand',
-            EnumMakeCommand::class => 'Illuminate\Foundation\Console\EnumMakeCommand',
-            ExceptionMakeCommand::class => 'Illuminate\Foundation\Console\ExceptionMakeCommand',
-            FactoryMakeCommand::class => 'Illuminate\Database\Console\Factories\FactoryMakeCommand',
-            InterfaceMakeCommand::class => 'Illuminate\Foundation\Console\InterfaceMakeCommand',
-            ListenerMakeCommand::class => 'Illuminate\Foundation\Console\ListenerMakeCommand',
-            MailMakeCommand::class => 'Illuminate\Foundation\Console\MailMakeCommand',
-            MiddlewareMakeCommand::class => 'Illuminate\Routing\Console\MiddlewareMakeCommand',
-            MigrationMakeCommand::class => 'Illuminate\Database\Console\Migrations\MigrateMakeCommand',
-            NotificationMakeCommand::class => 'Illuminate\Foundation\Console\NotificationMakeCommand',
-            ObserverMakeCommand::class => 'Illuminate\Foundation\Console\ObserverMakeCommand',
-            ProviderMakeCommand::class => 'Illuminate\Foundation\Console\ProviderMakeCommand',
-            ResourceMakeCommand::class => 'Illuminate\Foundation\Console\ResourceMakeCommand',
-            RuleMakeCommand::class => 'Illuminate\Foundation\Console\RuleMakeCommand',
-            ScopeMakeCommand::class => 'Illuminate\Foundation\Console\ScopeMakeCommand',
-            SeederMakeCommand::class => 'Illuminate\Database\Console\Seeds\SeederMakeCommand',
-            TestMakeCommand::class => 'Illuminate\Foundation\Console\TestMakeCommand',
-            ViewMakeCommand::class => 'Illuminate\Foundation\Console\ViewMakeCommand',
+            'LaravelModular\LaravelModular\Console\Commands\CastMakeCommand' => 'Illuminate\Foundation\Console\CastMakeCommand',
+            'LaravelModular\LaravelModular\Console\Commands\ChannelMakeCommand' => 'Illuminate\Foundation\Console\ChannelMakeCommand',
+            'LaravelModular\LaravelModular\Console\Commands\ComponentMakeCommand' => 'Illuminate\Foundation\Console\ComponentMakeCommand',
+            'LaravelModular\LaravelModular\Console\Commands\ConsoleMakeCommand' => 'Illuminate\Foundation\Console\ConsoleMakeCommand',
+            'LaravelModular\LaravelModular\Console\Commands\EnumMakeCommand' => 'Illuminate\Foundation\Console\EnumMakeCommand',
+            'LaravelModular\LaravelModular\Console\Commands\ExceptionMakeCommand' => 'Illuminate\Foundation\Console\ExceptionMakeCommand',
+            'LaravelModular\LaravelModular\Console\Commands\FactoryMakeCommand' => 'Illuminate\Database\Console\Factories\FactoryMakeCommand',
+            'LaravelModular\LaravelModular\Console\Commands\InterfaceMakeCommand' => 'Illuminate\Foundation\Console\InterfaceMakeCommand',
+            'LaravelModular\LaravelModular\Console\Commands\ListenerMakeCommand' => 'Illuminate\Foundation\Console\ListenerMakeCommand',
+            'LaravelModular\LaravelModular\Console\Commands\MailMakeCommand' => 'Illuminate\Foundation\Console\MailMakeCommand',
+            'LaravelModular\LaravelModular\Console\Commands\MiddlewareMakeCommand' => 'Illuminate\Routing\Console\MiddlewareMakeCommand',
+            'LaravelModular\LaravelModular\Console\Commands\MigrationMakeCommand' => 'Illuminate\Database\Console\Migrations\MigrateMakeCommand',
+            'LaravelModular\LaravelModular\Console\Commands\NotificationMakeCommand' => 'Illuminate\Foundation\Console\NotificationMakeCommand',
+            'LaravelModular\LaravelModular\Console\Commands\ObserverMakeCommand' => 'Illuminate\Foundation\Console\ObserverMakeCommand',
+            'LaravelModular\LaravelModular\Console\Commands\ProviderMakeCommand' => 'Illuminate\Foundation\Console\ProviderMakeCommand',
+            'LaravelModular\LaravelModular\Console\Commands\ResourceMakeCommand' => 'Illuminate\Foundation\Console\ResourceMakeCommand',
+            'LaravelModular\LaravelModular\Console\Commands\RuleMakeCommand' => 'Illuminate\Foundation\Console\RuleMakeCommand',
+            'LaravelModular\LaravelModular\Console\Commands\ScopeMakeCommand' => 'Illuminate\Foundation\Console\ScopeMakeCommand',
+            'LaravelModular\LaravelModular\Console\Commands\SeederMakeCommand' => 'Illuminate\Database\Console\Seeds\SeederMakeCommand',
+            'LaravelModular\LaravelModular\Console\Commands\TestMakeCommand' => 'Illuminate\Foundation\Console\TestMakeCommand',
+            'LaravelModular\LaravelModular\Console\Commands\ViewMakeCommand' => 'Illuminate\Foundation\Console\ViewMakeCommand',
         ];
 
         $availableCommands = [];
         foreach ($newCommands as $command => $baseClass) {
-            if (class_exists($baseClass)) {
+            if (class_exists($baseClass, true) && class_exists($command, true)) {
                 $availableCommands[] = $command;
             }
         }
