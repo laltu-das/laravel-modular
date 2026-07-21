@@ -20,17 +20,26 @@ Modules live in `Domains/` by default and use a DDD-friendly layout:
 
 ```text
 Domains/School/
-├── Application/{Commands,Queries,Listeners}
+├── Application/{Commands,Queries,Listeners,Policies}
 ├── Contracts/                         # convention-based public API
-├── Domain/{Entities,Events,Services,ValueObjects}
+├── Domain/{Entities,Enums,Events,Services,ValueObjects}
 ├── Infrastructure/
-│   ├── Http/{Controllers,Requests}
+│   ├── Broadcasting/
+│   ├── Casts/
+│   ├── Exceptions/
+│   ├── Http/{Controllers,Middleware,Requests,Resources}
 │   ├── Jobs/
-│   ├── Persistence/Models/
-│   └── Providers/ModuleServiceProvider.php
+│   ├── Mail/
+│   ├── Notifications/
+│   ├── Observers/
+│   ├── Persistence/{Models,Scopes}
+│   ├── Providers/ModuleServiceProvider.php
+│   ├── Rules/
+│   └── View/Components/
 ├── database/{migrations,factories,seeders}
 ├── resources/{views,lang}
 ├── routes/{web,api}.php
+├── tests/
 └── module.php
 ```
 
@@ -38,7 +47,39 @@ The package registers the `Domains\\` PSR-4 prefix at runtime. The root path and
 
 ## Generate resources in a module
 
-The normal Laravel generators gain a `--module` option:
+All standard Laravel generators gain a `--module` option. When `--module` is omitted, the default Laravel behavior is unchanged.
+
+### Supported generators
+
+| Command | Module directory |
+|---|---|
+| `make:cast` | `Infrastructure/Casts` |
+| `make:channel` | `Infrastructure/Broadcasting` |
+| `make:command` | `Application/Commands` |
+| `make:component` | `Infrastructure/View/Components` |
+| `make:controller` | `Infrastructure/Http/Controllers` |
+| `make:enum` | `Domain/Enums` |
+| `make:event` | `Domain/Events` |
+| `make:exception` | `Infrastructure/Exceptions` |
+| `make:factory` | `database/factories` |
+| `make:interface` | `Contracts` |
+| `make:job` | `Infrastructure/Jobs` |
+| `make:listener` | `Application/Listeners` |
+| `make:mail` | `Infrastructure/Mail` |
+| `make:middleware` | `Infrastructure/Http/Middleware` |
+| `make:migration` | `database/migrations` |
+| `make:model` | `Infrastructure/Persistence/Models` |
+| `make:notification` | `Infrastructure/Notifications` |
+| `make:observer` | `Infrastructure/Observers` |
+| `make:policy` | `Application/Policies` |
+| `make:provider` | `Infrastructure/Providers` |
+| `make:request` | `Infrastructure/Http/Requests` |
+| `make:resource` | `Infrastructure/Http/Resources` |
+| `make:rule` | `Infrastructure/Rules` |
+| `make:scope` | `Infrastructure/Persistence/Scopes` |
+| `make:seeder` | `database/seeders` |
+| `make:test` | `tests` |
+| `make:view` | `resources/views` |
 
 ### Category module
 
@@ -51,6 +92,10 @@ php artisan make:request UpdateCategoryRequest --module=Category
 php artisan make:job ProcessCategoryImport --module=Category
 php artisan make:event CategoryCreated --module=Category
 php artisan make:policy CategoryPolicy --module=Category
+php artisan make:resource CategoryResource --module=Category
+php artisan make:middleware EnsureCategoryActive --module=Category
+php artisan make:observer CategoryObserver --module=Category
+php artisan make:mail CategorySummaryMail --module=Category
 ```
 
 ### Product module
@@ -65,9 +110,12 @@ php artisan make:job SyncProductStock --module=Product
 php artisan make:event ProductCreated --module=Product
 php artisan make:event ProductStockUpdated --module=Product
 php artisan make:policy ProductPolicy --module=Product
+php artisan make:enum ProductStatus --module=Product
+php artisan make:interface ProductRepository --module=Product
+php artisan make:exception ProductNotFoundException --module=Product
 ```
 
-Controllers, requests, jobs and models are placed under Infrastructure; events under Domain; and policies under Application. Existing generator behavior is unchanged when `--module` is omitted.
+Controllers, requests, jobs, models, middleware, resources and observers are placed under Infrastructure; events and enums under Domain; policies, commands and listeners under Application. Existing generator behavior is unchanged when `--module` is omitted.
 
 For module models, `-m`, `-f`, and `-s` place the migration, factory, and seeder in that module's `database/` directories instead of the application's global database directory.
 

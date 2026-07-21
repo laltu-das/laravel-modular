@@ -8,15 +8,35 @@ use Composer\Autoload\ClassLoader;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\ServiceProvider;
+use LaravelModular\LaravelModular\Console\Commands\CastMakeCommand;
+use LaravelModular\LaravelModular\Console\Commands\ChannelMakeCommand;
+use LaravelModular\LaravelModular\Console\Commands\ComponentMakeCommand;
+use LaravelModular\LaravelModular\Console\Commands\ConsoleMakeCommand;
 use LaravelModular\LaravelModular\Console\Commands\ControllerMakeCommand;
+use LaravelModular\LaravelModular\Console\Commands\EnumMakeCommand;
 use LaravelModular\LaravelModular\Console\Commands\EventMakeCommand;
+use LaravelModular\LaravelModular\Console\Commands\ExceptionMakeCommand;
+use LaravelModular\LaravelModular\Console\Commands\FactoryMakeCommand;
+use LaravelModular\LaravelModular\Console\Commands\InterfaceMakeCommand;
 use LaravelModular\LaravelModular\Console\Commands\JobMakeCommand;
 use LaravelModular\LaravelModular\Console\Commands\LaravelModularCommand;
+use LaravelModular\LaravelModular\Console\Commands\ListenerMakeCommand;
+use LaravelModular\LaravelModular\Console\Commands\MailMakeCommand;
 use LaravelModular\LaravelModular\Console\Commands\MakeModuleCommand;
+use LaravelModular\LaravelModular\Console\Commands\MiddlewareMakeCommand;
 use LaravelModular\LaravelModular\Console\Commands\ModelMakeCommand;
 use LaravelModular\LaravelModular\Console\Commands\ModuleListCommand;
+use LaravelModular\LaravelModular\Console\Commands\NotificationMakeCommand;
+use LaravelModular\LaravelModular\Console\Commands\ObserverMakeCommand;
 use LaravelModular\LaravelModular\Console\Commands\PolicyMakeCommand;
+use LaravelModular\LaravelModular\Console\Commands\ProviderMakeCommand;
 use LaravelModular\LaravelModular\Console\Commands\RequestMakeCommand;
+use LaravelModular\LaravelModular\Console\Commands\ResourceMakeCommand;
+use LaravelModular\LaravelModular\Console\Commands\RuleMakeCommand;
+use LaravelModular\LaravelModular\Console\Commands\ScopeMakeCommand;
+use LaravelModular\LaravelModular\Console\Commands\SeederMakeCommand;
+use LaravelModular\LaravelModular\Console\Commands\TestMakeCommand;
+use LaravelModular\LaravelModular\Console\Commands\ViewMakeCommand;
 use LaravelModular\LaravelModular\Contracts\ModuleEventBus;
 use LaravelModular\LaravelModular\Contracts\TenantResolver;
 use LaravelModular\LaravelModular\Discovery\ModuleRepository;
@@ -116,6 +136,53 @@ final class LaravelModularServiceProvider extends ServiceProvider
         }
 
         $this->publishes([__DIR__.'/../config/laravel-modular.php' => config_path('laravel-modular.php')], ['laravel-modular', 'laravel-modular-config']);
-        $this->commands([LaravelModularCommand::class, MakeModuleCommand::class, ModuleListCommand::class, ControllerMakeCommand::class, ModelMakeCommand::class, RequestMakeCommand::class, JobMakeCommand::class, EventMakeCommand::class, PolicyMakeCommand::class]);
+
+        // Core commands (always available)
+        $this->commands([
+            LaravelModularCommand::class,
+            MakeModuleCommand::class,
+            ModuleListCommand::class,
+        ]);
+
+        // Generator commands - only register if the Laravel base class exists
+        $generatorCommands = [
+            CastMakeCommand::class => 'Illuminate\Foundation\Console\CastMakeCommand',
+            ChannelMakeCommand::class => 'Illuminate\Foundation\Console\ChannelMakeCommand',
+            ComponentMakeCommand::class => 'Illuminate\Foundation\Console\ComponentMakeCommand',
+            ConsoleMakeCommand::class => 'Illuminate\Foundation\Console\ConsoleMakeCommand',
+            ControllerMakeCommand::class => 'Illuminate\Routing\Console\ControllerMakeCommand',
+            EnumMakeCommand::class => 'Illuminate\Foundation\Console\EnumMakeCommand',
+            EventMakeCommand::class => 'Illuminate\Foundation\Console\EventMakeCommand',
+            ExceptionMakeCommand::class => 'Illuminate\Foundation\Console\ExceptionMakeCommand',
+            FactoryMakeCommand::class => 'Illuminate\Database\Console\Factories\FactoryMakeCommand',
+            InterfaceMakeCommand::class => 'Illuminate\Foundation\Console\InterfaceMakeCommand',
+            JobMakeCommand::class => 'Illuminate\Foundation\Console\JobMakeCommand',
+            ListenerMakeCommand::class => 'Illuminate\Foundation\Console\ListenerMakeCommand',
+            MailMakeCommand::class => 'Illuminate\Foundation\Console\MailMakeCommand',
+            MiddlewareMakeCommand::class => 'Illuminate\Routing\Console\MiddlewareMakeCommand',
+            ModelMakeCommand::class => 'Illuminate\Foundation\Console\ModelMakeCommand',
+            NotificationMakeCommand::class => 'Illuminate\Foundation\Console\NotificationMakeCommand',
+            ObserverMakeCommand::class => 'Illuminate\Foundation\Console\ObserverMakeCommand',
+            PolicyMakeCommand::class => 'Illuminate\Foundation\Console\PolicyMakeCommand',
+            ProviderMakeCommand::class => 'Illuminate\Foundation\Console\ProviderMakeCommand',
+            RequestMakeCommand::class => 'Illuminate\Foundation\Console\RequestMakeCommand',
+            ResourceMakeCommand::class => 'Illuminate\Foundation\Console\ResourceMakeCommand',
+            RuleMakeCommand::class => 'Illuminate\Foundation\Console\RuleMakeCommand',
+            ScopeMakeCommand::class => 'Illuminate\Foundation\Console\ScopeMakeCommand',
+            SeederMakeCommand::class => 'Illuminate\Database\Console\Seeds\SeederMakeCommand',
+            TestMakeCommand::class => 'Illuminate\Foundation\Console\TestMakeCommand',
+            ViewMakeCommand::class => 'Illuminate\Foundation\Console\ViewMakeCommand',
+        ];
+
+        $availableCommands = [];
+        foreach ($generatorCommands as $command => $baseClass) {
+            if (class_exists($baseClass)) {
+                $availableCommands[] = $command;
+            }
+        }
+
+        if ($availableCommands !== []) {
+            $this->commands($availableCommands);
+        }
     }
 }
