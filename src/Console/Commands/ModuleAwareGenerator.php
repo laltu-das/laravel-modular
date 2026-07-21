@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 namespace LaravelModular\LaravelModular\Console\Commands;
+
+use LaravelModular\LaravelModular\Support\Config;
 use Illuminate\Support\Str;
 use Symfony\Component\Console\Input\InputOption;
 trait ModuleAwareGenerator
@@ -12,24 +14,33 @@ trait ModuleAwareGenerator
         $this->getDefinition()->addOption(new InputOption('module', null, InputOption::VALUE_REQUIRED, 'Generate inside this module'));
     }
 
-    protected function qualifyClass($name): string
+    protected function qualifyClass(mixed $name): string
     {
         if (! $this->option('module')) return parent::qualifyClass($name);
-        $name = ltrim((string) $name, '\\/');
-        $module = Str::studly((string) $this->option('module'));
-        $root = trim((string) config('laravel-modular.namespace', 'Domains'), '\\');
+        $name = ltrim(is_string($name) ? $name : '', '\\/');
+        $module = Str::studly($this->moduleOption());
+        $root = trim(Config::string('laravel-modular.namespace', 'Domains'), '\\');
         $directory = str_replace('/', '\\', $this->moduleDirectory());
         return $root.'\\'.$module.'\\'.$directory.'\\'.str_replace('/', '\\', $name);
     }
 
-    protected function getPath($name): string
+    protected function getPath(mixed $name): string
     {
         if (! $this->option('module')) return parent::getPath($name);
-        $module = Str::studly((string) $this->option('module'));
-        $base = rtrim((string) config('laravel-modular.path'), '/').'/'.$module;
+        $module = Str::studly($this->moduleOption());
+        $base = rtrim(Config::string('laravel-modular.path', base_path('Domains')), '/').'/'.$module;
         if (! is_dir($base)) throw new \InvalidArgumentException("Module [{$module}] does not exist. Run moduler:make-module first.");
-        $prefix = trim((string) config('laravel-modular.namespace', 'Domains'), '\\').'\\'.$module.'\\';
-        return $base.'/'.str_replace('\\', '/', Str::after($name, $prefix)).'.php';
+        $prefix = trim(Config::string('laravel-modular.namespace', 'Domains'), '\\').'\\'.$module.'\\';
+        $class = is_string($name) ? $name : '';
+
+        return $base.'/'.str_replace('\\', '/', Str::after($class, $prefix)).'.php';
+    }
+
+    private function moduleOption(): string
+    {
+        $module = $this->option('module');
+
+        return is_string($module) ? $module : '';
     }
 
     abstract protected function moduleDirectory(): string;

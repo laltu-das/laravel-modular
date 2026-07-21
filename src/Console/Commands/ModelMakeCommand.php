@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace LaravelModular\LaravelModular\Console\Commands;
 
+use LaravelModular\LaravelModular\Support\Config;
+
 use Illuminate\Support\Str;
 
 final class ModelMakeCommand extends \Illuminate\Foundation\Console\ModelMakeCommand
@@ -18,10 +20,12 @@ final class ModelMakeCommand extends \Illuminate\Foundation\Console\ModelMakeCom
     /**
      * Keep Laravel's model options, but place companion artifacts in the module.
      */
-    public function handle()
+    public function handle(): void
     {
         if (! $this->option('module')) {
-            return parent::handle();
+            parent::handle();
+
+            return;
         }
 
         $migration = (bool) $this->option('migration');
@@ -34,11 +38,7 @@ final class ModelMakeCommand extends \Illuminate\Foundation\Console\ModelMakeCom
         $this->input->setOption('factory', false);
         $this->input->setOption('seed', false);
 
-        $result = parent::handle();
-
-        if ($result === false || $result === self::FAILURE) {
-            return $result;
-        }
+        parent::handle();
 
         if ($migration) {
             $this->createModuleMigration();
@@ -51,8 +51,6 @@ final class ModelMakeCommand extends \Illuminate\Foundation\Console\ModelMakeCom
         if ($seeder) {
             $this->createModuleSeeder();
         }
-
-        return $result;
     }
 
     private function createModuleMigration(): void
@@ -160,16 +158,18 @@ PHP;
 
     private function modelName(): string
     {
-        return class_basename(str_replace('\\', '/', (string) $this->argument('name')));
+        $name = $this->argument('name');
+
+        return class_basename(str_replace('\\', '/', is_string($name) ? $name : ''));
     }
 
     private function moduleNamespace(): string
     {
-        return trim((string) config('laravel-modular.namespace', 'Domains'), '\\').'\\'.Str::studly((string) $this->option('module'));
+        return trim(Config::string('laravel-modular.namespace', 'Domains'), '\\').'\\'.Str::studly($this->moduleOption());
     }
 
     private function modulePath(string $path): string
     {
-        return rtrim((string) config('laravel-modular.path'), '/').'/'.Str::studly((string) $this->option('module')).'/'.$path;
+        return rtrim(Config::string('laravel-modular.path', base_path('Domains')), '/').'/'.Str::studly($this->moduleOption()).'/'.$path;
     }
 }

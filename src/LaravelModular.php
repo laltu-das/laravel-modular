@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace LaravelModular\LaravelModular;
 
+use LaravelModular\LaravelModular\Support\Config;
+
 use LaravelModular\LaravelModular\Discovery\ModuleRepository;
 use LaravelModular\LaravelModular\Exceptions\ModuleNotFound;
 use LaravelModular\LaravelModular\Support\Module;
@@ -17,8 +19,8 @@ final readonly class LaravelModular
     public function isPublic(string $class): bool
     {
         $parts = explode('\\', $class);
-        $root = trim((string) config('laravel-modular.namespace', 'Domains'), '\\');
-        if (($parts[0] ?? null) !== $root || count($parts) < 3) return true;
+        $root = trim(Config::string('laravel-modular.namespace', 'Domains'), '\\');
+        if ($parts[0] !== $root || count($parts) < 3) return true;
         return in_array($parts[2], (array) config('laravel-modular.public_directories'), true);
     }
 }

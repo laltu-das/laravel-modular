@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace LaravelModular\LaravelModular\Console\Commands;
 
+use LaravelModular\LaravelModular\Support\Config;
+
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
@@ -17,13 +19,14 @@ final class MakeModuleCommand extends Command
 
     public function handle(): int
     {
-        $name = Str::studly((string) $this->argument('name'));
-        $root = rtrim((string) config('laravel-modular.path'), '/').'/'.$name;
+        $argument = $this->argument('name');
+        $name = Str::studly(is_string($argument) ? $argument : '');
+        $root = rtrim(Config::string('laravel-modular.path', base_path('Domains')), '/').'/'.$name;
         if ($this->files->isDirectory($root) && ! $this->option('force')) {
             $this->components->error("Module [{$name}] already exists."); return self::FAILURE;
         }
         foreach (['Application/Commands', 'Application/Queries', 'Application/Listeners', 'Domain/Entities', 'Domain/Events', 'Domain/Services', 'Domain/ValueObjects', 'Infrastructure/Http/Controllers', 'Infrastructure/Http/Requests', 'Infrastructure/Jobs', 'Infrastructure/Persistence/Models', 'Infrastructure/Providers', 'Contracts', 'database/migrations', 'database/factories', 'database/seeders', 'routes', 'resources/views', 'resources/lang'] as $directory) $this->files->ensureDirectoryExists($root.'/'.$directory);
-        $namespace = trim((string) config('laravel-modular.namespace', 'Domains'), '\\').'\\'.$name;
+        $namespace = trim(Config::string('laravel-modular.namespace', 'Domains'), '\\').'\\'.$name;
         $provider = <<<'PHP'
 <?php
 

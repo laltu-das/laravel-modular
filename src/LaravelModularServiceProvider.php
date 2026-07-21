@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace LaravelModular\LaravelModular;
 
+use LaravelModular\LaravelModular\Support\Config;
+
 use Composer\Autoload\ClassLoader;
+use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\ServiceProvider;
 use LaravelModular\LaravelModular\Console\Commands\ControllerMakeCommand;
 use LaravelModular\LaravelModular\Console\Commands\EventMakeCommand;
@@ -30,13 +34,18 @@ final class LaravelModularServiceProvider extends ServiceProvider
 
         // Make generated module classes available without requiring consumers to edit composer.json.
         foreach (ClassLoader::getRegisteredLoaders() as $loader) {
-            $loader->addPsr4(trim((string) config('laravel-modular.namespace', 'Domains'), '\\').'\\', rtrim((string) config('laravel-modular.path'), '/').'/', true);
+            $loader->addPsr4(trim(Config::string('laravel-modular.namespace', 'Domains'), '\\').'\\', rtrim(Config::string('laravel-modular.path', base_path('Domains')), '/').'/', true);
         }
 
-        $this->app->singleton(ModuleRepository::class, fn ($app) => new ModuleRepository($app['files'], (string) config('laravel-modular.path'), (string) config('laravel-modular.namespace')));
+        $this->app->singleton(ModuleRepository::class, fn (): ModuleRepository => new ModuleRepository(
+            $this->app->make(Filesystem::class),
+            Config::string('laravel-modular.path', base_path('Domains')),
+            Config::string('laravel-modular.namespace', 'Domains'),
+        ));
         $this->app->singleton(LaravelModular::class);
         $this->app->singleton(ModuleEventBus::class, LaravelEventBus::class);
-        if ($resolver = config('laravel-modular.tenant_resolver')) $this->app->bind(TenantResolver::class, $resolver);
+        $resolver = config('laravel-modular.tenant_resolver');
+        if (is_string($resolver) && $resolver !== '') $this->app->bind(TenantResolver::class, $resolver);
     }
 
     public function boot(ModuleRepository $repository): void
@@ -55,9 +64,16 @@ final class LaravelModularServiceProvider extends ServiceProvider
             $tenant = $this->app->bound(TenantResolver::class) ? $this->app->make(TenantResolver::class)->current() : null;
             event(new ModuleBooting($module, $tenant));
             $manifest = $module->manifest();
-            foreach ((array) ($manifest['providers'] ?? []) as $provider) $this->app->register($provider);
+            foreach ((array) ($manifest['providers'] ?? []) as $provider) {
+                if (is_string($provider)) $this->app->register($provider);
+            }
             if ($this->app->runningInConsole() && isset($manifest['commands'])) $this->commands((array) $manifest['commands']);
-            foreach ((array) ($manifest['listeners'] ?? []) as $event => $listeners) foreach ((array) $listeners as $listener) $this->app['events']->listen($event, $listener);
+            foreach ((array) ($manifest['listeners'] ?? []) as $event => $listeners) {
+                if (! is_string($event)) continue;
+                foreach ((array) $listeners as $listener) {
+                    if (is_string($listener)) $this->app->make(Dispatcher::class)->listen($event, $listener);
+                }
+            }
             if ($module->has('routes/web.php')) $this->loadRoutesFrom($module->path('routes/web.php'));
             if ($module->has('routes/api.php')) $this->loadRoutesFrom($module->path('routes/api.php'));
             if ($module->has('database/migrations')) $this->loadMigrationsFrom($module->path('database/migrations'));
