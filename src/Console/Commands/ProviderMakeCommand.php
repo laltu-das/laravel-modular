@@ -12,6 +12,6 @@ final class ProviderMakeCommand extends BaseProviderMakeCommand
 
     protected function moduleDirectory(): string
     {
-        return 'Infrastructure/Providers';
+        return 'Providers';
     }
 }

@@ -37,13 +37,11 @@ use LaravelModular\LaravelModular\Console\Commands\ScopeMakeCommand;
 use LaravelModular\LaravelModular\Console\Commands\SeederMakeCommand;
 use LaravelModular\LaravelModular\Console\Commands\TestMakeCommand;
 use LaravelModular\LaravelModular\Console\Commands\ViewMakeCommand;
-use LaravelModular\LaravelModular\Contracts\ModuleEventBus;
 use LaravelModular\LaravelModular\Contracts\TenantResolver;
 use LaravelModular\LaravelModular\Discovery\ModuleRepository;
 use LaravelModular\LaravelModular\Events\ModuleBooted;
 use LaravelModular\LaravelModular\Events\ModuleBooting;
 use LaravelModular\LaravelModular\Support\Config;
-use LaravelModular\LaravelModular\Support\LaravelEventBus;
 
 final class LaravelModularServiceProvider extends ServiceProvider
 {
@@ -52,16 +50,15 @@ final class LaravelModularServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(__DIR__.'/../config/laravel-modular.php', 'laravel-modular');
 
         foreach (ClassLoader::getRegisteredLoaders() as $loader) {
-            $loader->addPsr4(trim(Config::string('laravel-modular.namespace', 'Domains'), '\\').'\\', rtrim(Config::string('laravel-modular.path', base_path('Domains')), '/').'/', true);
+            $loader->addPsr4(trim(Config::string('laravel-modular.namespace', 'Modules'), '\\').'\\', rtrim(Config::string('laravel-modular.path', base_path('Modules')), '/').'/', true);
         }
 
         $this->app->singleton(ModuleRepository::class, fn (): ModuleRepository => new ModuleRepository(
             $this->app->make(Filesystem::class),
-            Config::string('laravel-modular.path', base_path('Domains')),
-            Config::string('laravel-modular.namespace', 'Domains'),
+            Config::string('laravel-modular.path', base_path('Modules')),
+            Config::string('laravel-modular.namespace', 'Modules'),
         ));
         $this->app->singleton(LaravelModular::class);
-        $this->app->singleton(ModuleEventBus::class, LaravelEventBus::class);
         $resolver = config('laravel-modular.tenant_resolver');
 
         if (is_string($resolver) && $resolver !== '') {

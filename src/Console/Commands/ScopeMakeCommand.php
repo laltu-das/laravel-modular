@@ -12,6 +12,6 @@ final class ScopeMakeCommand extends BaseScopeMakeCommand
 
     protected function moduleDirectory(): string
     {
-        return 'Infrastructure/Persistence/Scopes';
+        return 'Models/Scopes';
     }
 }

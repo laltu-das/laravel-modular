@@ -12,6 +12,6 @@ final class MailMakeCommand extends BaseMailMakeCommand
 
     protected function moduleDirectory(): string
     {
-        return 'Infrastructure/Mail';
+        return 'Mail';
     }
 }

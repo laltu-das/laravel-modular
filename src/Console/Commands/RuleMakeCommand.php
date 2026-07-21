@@ -12,6 +12,6 @@ final class RuleMakeCommand extends BaseRuleMakeCommand
 
     protected function moduleDirectory(): string
     {
-        return 'Infrastructure/Rules';
+        return 'Rules';
     }
 }

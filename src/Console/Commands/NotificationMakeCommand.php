@@ -12,6 +12,6 @@ final class NotificationMakeCommand extends BaseNotificationMakeCommand
 
     protected function moduleDirectory(): string
     {
-        return 'Infrastructure/Notifications';
+        return 'Notifications';
     }
 }

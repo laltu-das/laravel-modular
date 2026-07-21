@@ -12,6 +12,6 @@ final class ResourceMakeCommand extends BaseResourceMakeCommand
 
     protected function moduleDirectory(): string
     {
-        return 'Infrastructure/Http/Resources';
+        return 'Http/Resources';
     }
 }

@@ -12,6 +12,6 @@ final class ComponentMakeCommand extends BaseComponentMakeCommand
 
     protected function moduleDirectory(): string
     {
-        return 'Infrastructure/View/Components';
+        return 'View/Components';
     }
 }

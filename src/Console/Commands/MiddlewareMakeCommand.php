@@ -12,6 +12,6 @@ final class MiddlewareMakeCommand extends BaseMiddlewareMakeCommand
 
     protected function moduleDirectory(): string
     {
-        return 'Infrastructure/Http/Middleware';
+        return 'Http/Middleware';
     }
 }

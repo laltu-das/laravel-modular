@@ -1,7 +1,7 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
     "name": "laltu/laravel-modular",
-    "description": "",
+    "description": "A Laravel-style modular package for organizing application code by feature",
     "keywords": [
         "laravel",
         "laltu",

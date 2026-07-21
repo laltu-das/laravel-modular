@@ -12,6 +12,6 @@ final class EventMakeCommand extends BaseEventMakeCommand
 
     protected function moduleDirectory(): string
     {
-        return 'Domain/Events';
+        return 'Events';
     }
 }

@@ -25,7 +25,7 @@ trait ModuleAwareGenerator
 
         $name = ltrim($name, '\\/');
         $module = Str::studly($this->moduleOption());
-        $root = trim(Config::string('laravel-modular.namespace', 'Domains'), '\\');
+        $root = trim(Config::string('laravel-modular.namespace', 'Modules'), '\\');
         $directory = str_replace('/', '\\', $this->moduleDirectory());
 
         return $root.'\\'.$module.'\\'.$directory.'\\'.str_replace('/', '\\', $name);
@@ -38,15 +38,22 @@ trait ModuleAwareGenerator
         }
 
         $module = Str::studly($this->moduleOption());
-        $base = rtrim(Config::string('laravel-modular.path', base_path('Domains')), '/').'/'.$module;
+        $base = rtrim(Config::string('laravel-modular.path', base_path('Modules')), '/').'/'.$module;
 
         if (! is_dir($base)) {
             throw new InvalidArgumentException("Module [{$module}] does not exist. Run moduler:make-module first.");
         }
 
-        $prefix = trim(Config::string('laravel-modular.namespace', 'Domains'), '\\').'\\'.$module.'\\';
+        $prefix = trim(Config::string('laravel-modular.namespace', 'Modules'), '\\').'\\'.$module.'\\';
+        $directory = str_replace('/', '\\', $this->moduleDirectory());
+        $name = Str::after($name, $prefix.$directory.'\\');
 
-        return $base.'/'.str_replace('\\', '/', Str::after($name, $prefix)).'.php';
+        return $base.'/'.$this->modulePathDirectory().'/'.str_replace('\\', '/', $name).'.php';
+    }
+
+    protected function modulePathDirectory(): string
+    {
+        return $this->moduleDirectory();
     }
 
     private function moduleOption(): string

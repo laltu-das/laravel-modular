@@ -12,6 +12,6 @@ final class ChannelMakeCommand extends BaseChannelMakeCommand
 
     protected function moduleDirectory(): string
     {
-        return 'Infrastructure/Broadcasting';
+        return 'Broadcasting';
     }
 }

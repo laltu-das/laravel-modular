@@ -12,6 +12,6 @@ final class RequestMakeCommand extends BaseRequestMakeCommand
 
     protected function moduleDirectory(): string
     {
-        return 'Infrastructure/Http/Requests';
+        return 'Http/Requests';
     }
 }

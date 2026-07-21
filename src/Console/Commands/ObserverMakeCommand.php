@@ -12,6 +12,6 @@ final class ObserverMakeCommand extends BaseObserverMakeCommand
 
     protected function moduleDirectory(): string
     {
-        return 'Infrastructure/Observers';
+        return 'Observers';
     }
 }

@@ -12,6 +12,11 @@ final class SeederMakeCommand extends BaseSeederMakeCommand
 
     protected function moduleDirectory(): string
     {
+        return 'Database/Seeders';
+    }
+
+    protected function modulePathDirectory(): string
+    {
         return 'database/seeders';
     }
 }

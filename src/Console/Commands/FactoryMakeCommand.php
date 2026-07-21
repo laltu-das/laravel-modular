@@ -12,6 +12,11 @@ final class FactoryMakeCommand extends BaseFactoryMakeCommand
 
     protected function moduleDirectory(): string
     {
+        return 'Database/Factories';
+    }
+
+    protected function modulePathDirectory(): string
+    {
         return 'database/factories';
     }
 }

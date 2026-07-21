@@ -12,6 +12,6 @@ final class JobMakeCommand extends BaseJobMakeCommand
 
     protected function moduleDirectory(): string
     {
-        return 'Infrastructure/Jobs';
+        return 'Jobs';
     }
 }

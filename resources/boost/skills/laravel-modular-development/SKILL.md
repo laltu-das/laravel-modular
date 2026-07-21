@@ -9,33 +9,47 @@ metadata:
 
 # Laravel Modular
 
-Use this skill when a Laravel application needs to integrate the Laravel Modular package.
+Use this skill when a Laravel application needs to organize feature code into independently discovered modules with the `laltu/laravel-modular` package.
 
-## Primary Goal
+## Primary goal
 
-- apply the `laltu/laravel-modular` package's public API in the smallest correct way
+Use the package's public Artisan commands and configuration while keeping generated code in Laravel's familiar directories.
 
-## Workflow
+## Installation
 
-### 1. Inspect the Laravel app context
+```bash
+composer require laltu/laravel-modular
+php artisan vendor:publish --tag=laravel-modular-config
+```
 
-- confirm the app is a Laravel project
-- inspect the target code paths where the package should be applied
+## Create a module
 
-### 2. Apply the package's public API
+```bash
+php artisan moduler:make-module School
+php artisan moduler:list
+```
 
-Document how to integrate Laravel Modular here, replacing this placeholder with the integration steps for your package.
+A module is created below `Modules/School` by default. Its folders mirror the folders in a Laravel application, such as `Http/Controllers`, `Models`, `Providers`, `Jobs`, `Events`, `database`, `resources`, and `routes`.
 
-## Rules, References, and Templates
+## Generate code
 
-Read before executing:
+Pass `--module` to any supported Laravel generator:
 
-- no additional resource files for this skill
+```bash
+php artisan make:controller SchoolController --module=School
+php artisan make:model School --module=School -m -f -s
+php artisan make:request StoreSchoolRequest --module=School
+```
 
-## Examples
+Without `--module`, generators keep Laravel's standard behavior. Use the generated module's `Providers/ModuleServiceProvider.php` for module-specific bindings and boot logic.
 
-- describe a representative integration scenario for Laravel Modular
+## Module resources
 
-## Anti-patterns
+The package automatically loads a module's `routes/web.php`, `routes/api.php`, migrations, views, translations, providers, commands, and listeners. Add or remove a module by creating or removing its directory below the configured module path; add `.disabled` to temporarily skip one.
 
-- do not document package internals here; keep the skill focused on adoption in Laravel apps
+## Rules
+
+- Prefer Laravel's normal controllers, models, requests, jobs, events, listeners, and providers.
+- Keep module-specific code in that module's generated Laravel-style directories.
+- Use `module.php` for providers, commands, and event listener declarations.
+- Do not depend on package internals when the public Artisan commands and configuration are sufficient.

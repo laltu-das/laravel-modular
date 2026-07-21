@@ -12,6 +12,6 @@ final class PolicyMakeCommand extends BasePolicyMakeCommand
 
     protected function moduleDirectory(): string
     {
-        return 'Application/Policies';
+        return 'Policies';
     }
 }
