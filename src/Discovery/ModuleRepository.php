@@ -17,15 +17,22 @@ final class ModuleRepository
         //
     }
 
-    /** @return array<string, Module> */
-    public function all(): array
+    /**
+     * Enabled modules below the module path. Pass $includeDisabled to also
+     * list modules marked with a `.disabled` file (unmemoized).
+     *
+     * @return array<string, Module>
+     */
+    public function all(bool $includeDisabled = false): array
     {
-        if ($this->modules !== null) {
+        if (! $includeDisabled && $this->modules !== null) {
             return $this->modules;
         }
 
         if (! $this->files->isDirectory($this->path)) {
-            return $this->modules = [];
+            $this->modules = [];
+
+            return $this->modules;
         }
 
         $modules = [];
@@ -33,16 +40,26 @@ final class ModuleRepository
         foreach ($this->files->directories($this->path) as $directory) {
             $name = basename($directory);
 
-            if (str_starts_with($name, '.') || is_file($directory.'/.disabled')) {
+            if (str_starts_with($name, '.')) {
                 continue;
             }
 
-            $modules[$name] = new Module($name, $directory, trim($this->namespace, '\\').'\\'.$name);
+            $disabled = is_file($directory.'/.disabled');
+
+            if ($disabled && ! $includeDisabled) {
+                continue;
+            }
+
+            $modules[$name] = new Module($name, $directory, trim($this->namespace, '\\').'\\'.$name, $disabled);
         }
 
         ksort($modules);
 
-        return $this->modules = $modules;
+        if (! $includeDisabled) {
+            $this->modules = $modules;
+        }
+
+        return $modules;
     }
 
     public function find(string $name): ?Module

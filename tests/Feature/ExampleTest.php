@@ -31,10 +31,14 @@ it('registers the artisan command', function () {
         ->assertSuccessful();
 });
 
-it('uses Laravel-style module defaults', function () {
-    expect(config('laravel-modular.path'))->toBe(base_path('Modules'))
-        ->and(config('laravel-modular.namespace'))->toBe('Modules')
-        ->and(config('laravel-modular'))->not->toHaveKey('public_directories');
+it('uses convention-first module defaults', function () {
+    expect(config('laravel-modular.namespace'))->toBe('Modules')
+        ->and(config('laravel-modular.enabled'))->toBeTrue()
+        ->and(config('laravel-modular.tenant_resolver'))->toBeNull()
+        ->and(config('laravel-modular.tenant_voter'))->toBeNull()
+        ->and(config('laravel-modular.public_directories'))->toBe(['Contracts', 'Events', 'Enums'])
+        ->and(config('laravel-modular.auto_discovery.listeners'))->toBeTrue()
+        ->and(config('laravel-modular.auto_discovery.routes'))->toBeTrue();
 });
 
 it('creates a module using Laravel directories', function () {
@@ -50,6 +54,8 @@ it('creates a module using Laravel directories', function () {
         expect(File::exists($path.'/School/Http/Controllers'))
             ->toBeTrue()
             ->and(File::exists($path.'/School/Models'))
+            ->toBeTrue()
+            ->and(File::exists($path.'/School/config/school.php'))
             ->toBeTrue()
             ->and(File::exists($path.'/School/Providers/ModuleServiceProvider.php'))
             ->toBeTrue()

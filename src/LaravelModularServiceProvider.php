@@ -5,9 +5,15 @@ declare(strict_types=1);
 namespace LaravelModular\LaravelModular;
 
 use Composer\Autoload\ClassLoader;
+use Illuminate\Console\Command;
+use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
+use LaravelModular\LaravelModular\Boundaries\ModuleBoundaryInspector;
 use LaravelModular\LaravelModular\Console\Commands\CastMakeCommand;
 use LaravelModular\LaravelModular\Console\Commands\ChannelMakeCommand;
 use LaravelModular\LaravelModular\Console\Commands\ComponentMakeCommand;
@@ -25,6 +31,9 @@ use LaravelModular\LaravelModular\Console\Commands\MailMakeCommand;
 use LaravelModular\LaravelModular\Console\Commands\MakeModuleCommand;
 use LaravelModular\LaravelModular\Console\Commands\MiddlewareMakeCommand;
 use LaravelModular\LaravelModular\Console\Commands\ModelMakeCommand;
+use LaravelModular\LaravelModular\Console\Commands\ModuleBoundariesCommand;
+use LaravelModular\LaravelModular\Console\Commands\ModuleDisableCommand;
+use LaravelModular\LaravelModular\Console\Commands\ModuleEnableCommand;
 use LaravelModular\LaravelModular\Console\Commands\ModuleListCommand;
 use LaravelModular\LaravelModular\Console\Commands\NotificationMakeCommand;
 use LaravelModular\LaravelModular\Console\Commands\ObserverMakeCommand;
@@ -37,11 +46,16 @@ use LaravelModular\LaravelModular\Console\Commands\ScopeMakeCommand;
 use LaravelModular\LaravelModular\Console\Commands\SeederMakeCommand;
 use LaravelModular\LaravelModular\Console\Commands\TestMakeCommand;
 use LaravelModular\LaravelModular\Console\Commands\ViewMakeCommand;
+use LaravelModular\LaravelModular\Contracts\TenantModuleVoter;
 use LaravelModular\LaravelModular\Contracts\TenantResolver;
+use LaravelModular\LaravelModular\Discovery\ListenerDiscovery;
+use LaravelModular\LaravelModular\Discovery\ModuleClassDiscovery;
 use LaravelModular\LaravelModular\Discovery\ModuleRepository;
 use LaravelModular\LaravelModular\Events\ModuleBooted;
 use LaravelModular\LaravelModular\Events\ModuleBooting;
 use LaravelModular\LaravelModular\Support\Config;
+use LaravelModular\LaravelModular\Support\CurrentTenant;
+use LaravelModular\LaravelModular\Support\Module;
 
 final class LaravelModularServiceProvider extends ServiceProvider
 {
@@ -58,71 +72,61 @@ final class LaravelModularServiceProvider extends ServiceProvider
             Config::string('laravel-modular.path', base_path('Modules')),
             Config::string('laravel-modular.namespace', 'Modules'),
         ));
-        $this->app->singleton(LaravelModular::class);
+
         $resolver = config('laravel-modular.tenant_resolver');
 
         if (is_string($resolver) && $resolver !== '') {
             $this->app->bind(TenantResolver::class, $resolver);
         }
+
+        $voter = config('laravel-modular.tenant_voter');
+
+        if (is_string($voter) && $voter !== '') {
+            $this->app->bind(TenantModuleVoter::class, $voter);
+        }
+
+        $this->app->singleton(CurrentTenant::class, fn (Application $app): CurrentTenant => new CurrentTenant(
+            $app->bound(TenantResolver::class) ? $app->make(TenantResolver::class) : null,
+        ));
+
+        $this->app->singleton(ModuleClassDiscovery::class, fn (Application $app): ModuleClassDiscovery => new ModuleClassDiscovery(
+            $app->make(Filesystem::class),
+        ));
+
+        $this->app->singleton(ListenerDiscovery::class, fn (Application $app): ListenerDiscovery => new ListenerDiscovery(
+            $app->make(ModuleClassDiscovery::class),
+        ));
+
+        $this->app->singleton(ModuleBoundaryInspector::class, fn (Application $app): ModuleBoundaryInspector => new ModuleBoundaryInspector(
+            $app->make(Filesystem::class),
+        ));
+
+        $this->app->singleton(LaravelModular::class, fn (Application $app): LaravelModular => new LaravelModular(
+            $app->make(ModuleRepository::class),
+            $app->make(CurrentTenant::class),
+            $app->bound(TenantModuleVoter::class) ? $app->make(TenantModuleVoter::class) : null,
+            $app->make(Dispatcher::class),
+        ));
+
+        $this->registerModules($this->app->make(ModuleRepository::class), $this->app->make(LaravelModular::class));
     }
 
-    public function boot(ModuleRepository $repository): void
+    public function boot(ModuleRepository $repository, LaravelModular $modular): void
     {
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'laravel-modular');
         $this->loadTranslationsFrom(__DIR__.'/../lang', 'laravel-modular');
 
-        if ((bool) config('laravel-modular.enabled', true)) {
+        if (Config::bool('laravel-modular.enabled', true)) {
+            $tenant = $modular->tenant();
+
             foreach ($repository->all() as $module) {
-                foreach (ClassLoader::getRegisteredLoaders() as $loader) {
-                    $loader->addPsr4($module->namespace.'\\Database\\Factories\\', $module->path('database/factories').'/', true);
-                    $loader->addPsr4($module->namespace.'\\Database\\Seeders\\', $module->path('database/seeders').'/', true);
+                if (! $modular->isEnabled($module)) {
+                    continue;
                 }
 
-                $tenant = $this->app->bound(TenantResolver::class) ? $this->app->make(TenantResolver::class)->current() : null;
                 event(new ModuleBooting($module, $tenant));
-                $manifest = $module->manifest();
 
-                foreach ((array) ($manifest['providers'] ?? []) as $provider) {
-                    if (is_string($provider)) {
-                        $this->app->register($provider);
-                    }
-                }
-
-                if ($this->app->runningInConsole() && isset($manifest['commands'])) {
-                    $this->commands((array) $manifest['commands']);
-                }
-
-                foreach ((array) ($manifest['listeners'] ?? []) as $event => $listeners) {
-                    if (! is_string($event)) {
-                        continue;
-                    }
-
-                    foreach ((array) $listeners as $listener) {
-                        if (is_string($listener) && class_exists($listener)) {
-                            $this->app->make(Dispatcher::class)->listen($event, $listener);
-                        }
-                    }
-                }
-
-                if ($module->has('routes/web.php')) {
-                    $this->loadRoutesFrom($module->path('routes/web.php'));
-                }
-
-                if ($module->has('routes/api.php')) {
-                    $this->loadRoutesFrom($module->path('routes/api.php'));
-                }
-
-                if ($module->has('database/migrations')) {
-                    $this->loadMigrationsFrom($module->path('database/migrations'));
-                }
-
-                if ($module->has('resources/views')) {
-                    $this->loadViewsFrom($module->path('resources/views'), strtolower($module->name));
-                }
-
-                if ($module->has('resources/lang')) {
-                    $this->loadTranslationsFrom($module->path('resources/lang'), strtolower($module->name));
-                }
+                $this->bootModule($module);
 
                 event(new ModuleBooted($module, $tenant));
             }
@@ -138,37 +142,40 @@ final class LaravelModularServiceProvider extends ServiceProvider
         $this->commands([
             LaravelModularCommand::class,
             MakeModuleCommand::class,
+            ModuleBoundariesCommand::class,
+            ModuleDisableCommand::class,
+            ModuleEnableCommand::class,
             ModuleListCommand::class,
         ]);
 
         // Generator commands - only register if the Laravel base class exists
         $generatorCommands = [
-            CastMakeCommand::class => 'Illuminate\Foundation\Console\CastMakeCommand',
-            ChannelMakeCommand::class => 'Illuminate\Foundation\Console\ChannelMakeCommand',
-            ComponentMakeCommand::class => 'Illuminate\Foundation\Console\ComponentMakeCommand',
-            ConsoleMakeCommand::class => 'Illuminate\Foundation\Console\ConsoleMakeCommand',
-            ControllerMakeCommand::class => 'Illuminate\Routing\Console\ControllerMakeCommand',
-            EnumMakeCommand::class => 'Illuminate\Foundation\Console\EnumMakeCommand',
-            EventMakeCommand::class => 'Illuminate\Foundation\Console\EventMakeCommand',
-            ExceptionMakeCommand::class => 'Illuminate\Foundation\Console\ExceptionMakeCommand',
-            FactoryMakeCommand::class => 'Illuminate\Database\Console\Factories\FactoryMakeCommand',
-            InterfaceMakeCommand::class => 'Illuminate\Foundation\Console\InterfaceMakeCommand',
-            JobMakeCommand::class => 'Illuminate\Foundation\Console\JobMakeCommand',
-            ListenerMakeCommand::class => 'Illuminate\Foundation\Console\ListenerMakeCommand',
-            MailMakeCommand::class => 'Illuminate\Foundation\Console\MailMakeCommand',
-            MiddlewareMakeCommand::class => 'Illuminate\Routing\Console\MiddlewareMakeCommand',
-            ModelMakeCommand::class => 'Illuminate\Foundation\Console\ModelMakeCommand',
-            NotificationMakeCommand::class => 'Illuminate\Foundation\Console\NotificationMakeCommand',
-            ObserverMakeCommand::class => 'Illuminate\Foundation\Console\ObserverMakeCommand',
-            PolicyMakeCommand::class => 'Illuminate\Foundation\Console\PolicyMakeCommand',
-            ProviderMakeCommand::class => 'Illuminate\Foundation\Console\ProviderMakeCommand',
-            RequestMakeCommand::class => 'Illuminate\Foundation\Console\RequestMakeCommand',
-            ResourceMakeCommand::class => 'Illuminate\Foundation\Console\ResourceMakeCommand',
-            RuleMakeCommand::class => 'Illuminate\Foundation\Console\RuleMakeCommand',
-            ScopeMakeCommand::class => 'Illuminate\Foundation\Console\ScopeMakeCommand',
-            SeederMakeCommand::class => 'Illuminate\Database\Console\Seeds\SeederMakeCommand',
-            TestMakeCommand::class => 'Illuminate\Foundation\Console\TestMakeCommand',
-            ViewMakeCommand::class => 'Illuminate\Foundation\Console\ViewMakeCommand',
+            CastMakeCommand::class => 'Illuminate\\Foundation\\Console\\CastMakeCommand',
+            ChannelMakeCommand::class => 'Illuminate\\Foundation\\Console\\ChannelMakeCommand',
+            ComponentMakeCommand::class => 'Illuminate\\Foundation\\Console\\ComponentMakeCommand',
+            ConsoleMakeCommand::class => 'Illuminate\\Foundation\\Console\\ConsoleMakeCommand',
+            ControllerMakeCommand::class => 'Illuminate\\Routing\\Console\\ControllerMakeCommand',
+            EnumMakeCommand::class => 'Illuminate\\Foundation\\Console\\EnumMakeCommand',
+            EventMakeCommand::class => 'Illuminate\\Foundation\\Console\\EventMakeCommand',
+            ExceptionMakeCommand::class => 'Illuminate\\Foundation\\Console\\ExceptionMakeCommand',
+            FactoryMakeCommand::class => 'Illuminate\\Database\\Console\\Factories\\FactoryMakeCommand',
+            InterfaceMakeCommand::class => 'Illuminate\\Foundation\\Console\\InterfaceMakeCommand',
+            JobMakeCommand::class => 'Illuminate\\Foundation\\Console\\JobMakeCommand',
+            ListenerMakeCommand::class => 'Illuminate\\Foundation\\Console\\ListenerMakeCommand',
+            MailMakeCommand::class => 'Illuminate\\Foundation\\Console\\MailMakeCommand',
+            MiddlewareMakeCommand::class => 'Illuminate\\Routing\\Console\\MiddlewareMakeCommand',
+            ModelMakeCommand::class => 'Illuminate\\Foundation\\Console\\ModelMakeCommand',
+            NotificationMakeCommand::class => 'Illuminate\\Foundation\\Console\\NotificationMakeCommand',
+            ObserverMakeCommand::class => 'Illuminate\\Foundation\\Console\\ObserverMakeCommand',
+            PolicyMakeCommand::class => 'Illuminate\\Foundation\\Console\\PolicyMakeCommand',
+            ProviderMakeCommand::class => 'Illuminate\\Foundation\\Console\\ProviderMakeCommand',
+            RequestMakeCommand::class => 'Illuminate\\Foundation\\Console\\RequestMakeCommand',
+            ResourceMakeCommand::class => 'Illuminate\\Foundation\\Console\\ResourceMakeCommand',
+            RuleMakeCommand::class => 'Illuminate\\Foundation\\Console\\RuleMakeCommand',
+            ScopeMakeCommand::class => 'Illuminate\\Foundation\\Console\\ScopeMakeCommand',
+            SeederMakeCommand::class => 'Illuminate\\Database\\Console\\Seeds\\SeederMakeCommand',
+            TestMakeCommand::class => 'Illuminate\\Foundation\\Console\\TestMakeCommand',
+            ViewMakeCommand::class => 'Illuminate\\Foundation\\Console\\ViewMakeCommand',
         ];
 
         $availableCommands = [];
@@ -181,5 +188,251 @@ final class LaravelModularServiceProvider extends ServiceProvider
         if ($availableCommands !== []) {
             $this->commands($availableCommands);
         }
+    }
+
+    /**
+     * Register module providers during the container's registration phase so
+     * each module provider enjoys the full lifecycle (register + boot), the
+     * same way Spring Boot auto-configurations participate in the context
+     * refresh. Providers the tenant voter rejects are skipped entirely.
+     */
+    private function registerModules(ModuleRepository $repository, LaravelModular $modular): void
+    {
+        if (! Config::bool('laravel-modular.enabled', true)) {
+            return;
+        }
+
+        foreach ($repository->all() as $module) {
+            $this->registerModuleAutoloaders($module);
+        }
+
+        foreach ($repository->all() as $module) {
+            if (! $modular->isEnabled($module)) {
+                continue;
+            }
+
+            $this->registerModuleProviders($module, $module->manifest());
+        }
+    }
+
+    /**
+     * Boot one module like Spring Boot auto-configuration: convention-based
+     * registration of config, commands, listeners, policies, observers,
+     * routes, migrations, views, and translations.
+     */
+    private function bootModule(Module $module): void
+    {
+        $manifest = $module->manifest();
+
+        if (Config::bool('laravel-modular.auto_discovery.config', true)) {
+            $this->mergeModuleConfig($module);
+        }
+
+        $this->registerModuleCommands($module, $manifest);
+        $this->registerModuleListeners($module, $manifest);
+        $this->registerModulePolicies($module);
+        $this->registerModuleObservers($module);
+
+        if (Config::bool('laravel-modular.auto_discovery.routes', true)) {
+            if ($module->has('routes/web.php')) {
+                $this->loadRoutesFrom($module->path('routes/web.php'));
+            }
+
+            if ($module->has('routes/api.php')) {
+                $this->loadRoutesFrom($module->path('routes/api.php'));
+            }
+        }
+
+        if (Config::bool('laravel-modular.auto_discovery.migrations', true) && $module->has('database/migrations')) {
+            $this->loadMigrationsFrom($module->path('database/migrations'));
+        }
+
+        if (Config::bool('laravel-modular.auto_discovery.views', true) && $module->has('resources/views')) {
+            $this->loadViewsFrom($module->path('resources/views'), strtolower($module->name));
+        }
+
+        if (Config::bool('laravel-modular.auto_discovery.translations', true) && $module->has('resources/lang')) {
+            $this->loadTranslationsFrom($module->path('resources/lang'), strtolower($module->name));
+        }
+    }
+
+    private function registerModuleAutoloaders(Module $module): void
+    {
+        foreach (ClassLoader::getRegisteredLoaders() as $loader) {
+            $loader->addPsr4($module->namespace.'\\Database\\Factories\\', $module->path('database/factories').'/', true);
+            $loader->addPsr4($module->namespace.'\\Database\\Seeders\\', $module->path('database/seeders').'/', true);
+        }
+    }
+
+    /**
+     * Merge each php file below the module's config/ directory under a key
+     * named after the file (config/billing.php => config('billing.*')).
+     */
+    private function mergeModuleConfig(Module $module): void
+    {
+        $directory = $module->path('config');
+
+        if (! $this->app->make(Filesystem::class)->isDirectory($directory)) {
+            return;
+        }
+
+        foreach ($this->app->make(Filesystem::class)->files($directory) as $file) {
+            if ($file->getExtension() === 'php') {
+                $this->mergeConfigFrom($file->getPathname(), $file->getFilenameWithoutExtension());
+            }
+        }
+    }
+
+    /**
+     * Manifest providers first, then any concrete *ServiceProvider below the
+     * module's Providers directory (auto-discovered, de-duplicated).
+     *
+     * @param  array<string, mixed>  $manifest
+     */
+    private function registerModuleProviders(Module $module, array $manifest): void
+    {
+        $providers = [];
+
+        foreach ((array) ($manifest['providers'] ?? []) as $provider) {
+            if (is_string($provider)) {
+                $providers[] = $provider;
+            }
+        }
+
+        if (Config::bool('laravel-modular.auto_discovery.providers', true)) {
+            foreach ($this->classes()->concreteIn($module, 'Providers') as $provider) {
+                if (is_subclass_of($provider, ServiceProvider::class)) {
+                    $providers[] = $provider;
+                }
+            }
+        }
+
+        foreach (array_unique($providers) as $provider) {
+            if (class_exists($provider)) {
+                $this->app->register($provider);
+            }
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $manifest
+     */
+    private function registerModuleCommands(Module $module, array $manifest): void
+    {
+        if (! $this->app->runningInConsole()) {
+            return;
+        }
+
+        $commands = [];
+
+        foreach ((array) ($manifest['commands'] ?? []) as $command) {
+            if (is_string($command)) {
+                $commands[] = $command;
+            }
+        }
+
+        if (Config::bool('laravel-modular.auto_discovery.commands', true)) {
+            foreach ($this->classes()->concreteIn($module, 'Console/Commands') as $command) {
+                if (is_subclass_of($command, Command::class)) {
+                    $commands[] = $command;
+                }
+            }
+        }
+
+        $commands = array_values(array_unique($commands));
+
+        if ($commands !== []) {
+            $this->commands($commands);
+        }
+    }
+
+    /**
+     * Manifest listeners (including wildcards) plus every listener below the
+     * module's Listeners directory, whose handled event is inferred from the
+     * type-hint of its handle method.
+     *
+     * @param  array<string, mixed>  $manifest
+     */
+    private function registerModuleListeners(Module $module, array $manifest): void
+    {
+        $listeners = [];
+
+        foreach ((array) ($manifest['listeners'] ?? []) as $event => $handlers) {
+            if (is_string($event)) {
+                $listeners[$event] = array_values(array_filter((array) $handlers, 'is_string'));
+            }
+        }
+
+        if (Config::bool('laravel-modular.auto_discovery.listeners', true)) {
+            foreach ($this->listeners()->discover($module) as $event => $handlers) {
+                $listeners[$event] = array_values(array_unique(array_merge((array) ($listeners[$event] ?? []), $handlers)));
+            }
+        }
+
+        foreach ($listeners as $event => $handlers) {
+            foreach ($handlers as $handler) {
+                $target = str_contains($handler, '@') ? Str::before($handler, '@') : $handler;
+
+                if (class_exists($target)) {
+                    $this->app->make(Dispatcher::class)->listen($event, $handler);
+                }
+            }
+        }
+    }
+
+    /**
+     * Policies follow the {Model}Policy => Models/{Model} convention.
+     */
+    private function registerModulePolicies(Module $module): void
+    {
+        if (! Config::bool('laravel-modular.auto_discovery.policies', true)) {
+            return;
+        }
+
+        $policies = [];
+
+        foreach ($this->classes()->concreteIn($module, 'Policies') as $policy) {
+            $model = $module->class('Models/'.Str::beforeLast(class_basename($policy), 'Policy'));
+
+            if (class_exists($model)) {
+                $policies[$model] = $policy;
+            }
+        }
+
+        if ($policies !== []) {
+            $gate = $this->app->make(Gate::class);
+
+            foreach ($policies as $model => $policy) {
+                $gate->policy($model, $policy);
+            }
+        }
+    }
+
+    /**
+     * Observers follow the {Model}Observer => Models/{Model} convention.
+     */
+    private function registerModuleObservers(Module $module): void
+    {
+        if (! Config::bool('laravel-modular.auto_discovery.observers', true) || ! class_exists(Model::class)) {
+            return;
+        }
+
+        foreach ($this->classes()->concreteIn($module, 'Observers') as $observer) {
+            $model = $module->class('Models/'.Str::beforeLast(class_basename($observer), 'Observer'));
+
+            if (class_exists($model) && is_subclass_of($model, Model::class)) {
+                $model::observe($observer);
+            }
+        }
+    }
+
+    private function classes(): ModuleClassDiscovery
+    {
+        return $this->app->make(ModuleClassDiscovery::class);
+    }
+
+    private function listeners(): ListenerDiscovery
+    {
+        return $this->app->make(ListenerDiscovery::class);
     }
 }

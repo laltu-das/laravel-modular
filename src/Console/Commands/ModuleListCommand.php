@@ -12,16 +12,16 @@ final class ModuleListCommand extends Command
 {
     protected $signature = 'module:list';
 
-    protected $description = 'List discovered modules';
+    protected $description = 'List discovered modules and their status';
 
     public function handle(ModuleRepository $modules): int
     {
         $rows = array_map(
-            fn (Module $module): array => [$module->name, $module->path],
-            $modules->all(),
+            fn (Module $module): array => [$module->name, $module->disabled ? 'Disabled' : 'Enabled', $module->path],
+            $modules->all(true),
         );
 
-        $this->table(['Module', 'Path'], $rows);
+        $this->table(['Module', 'Status', 'Path'], $rows);
 
         return self::SUCCESS;
     }
