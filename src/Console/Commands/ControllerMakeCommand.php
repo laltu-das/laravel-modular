@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace LaravelModular\LaravelModular\Console\Commands;
 
-use Illuminate\Routing\Console\ControllerMakeCommand;
+use Illuminate\Routing\Console\ControllerMakeCommand as BaseControllerMakeCommand;
 
-final class ControllerMakeCommand extends ControllerMakeCommand
+final class ControllerMakeCommand extends BaseControllerMakeCommand
 {
     use ModuleAwareGenerator;
 
