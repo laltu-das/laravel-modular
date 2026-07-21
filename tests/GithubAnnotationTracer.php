@@ -14,8 +14,15 @@ use PHPUnit\Event\Tracer\Tracer;
  */
 final class GithubAnnotationTracer implements Tracer
 {
+    private bool $seen = false;
+
     public function trace(Event $event): void
     {
+        if (! $this->seen) {
+            $this->seen = true;
+            fwrite(STDERR, '::warning::GithubAnnotationTracer first event: '.$event::class.PHP_EOL);
+        }
+
         $class = $event::class;
 
         if (! str_ends_with($class, 'Failed') && ! str_ends_with($class, 'Errored')) {

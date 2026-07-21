@@ -16,6 +16,7 @@ final class GithubAnnotationExtension implements Extension
 {
     public function bootstrap(Configuration $configuration, Facade $facade, ParameterCollection $parameters): void
     {
+        fwrite(STDERR, '::warning::GithubAnnotationExtension bootstrapped'.PHP_EOL);
         $facade->registerTracer(new GithubAnnotationTracer());
     }
 }
