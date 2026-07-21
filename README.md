@@ -13,6 +13,25 @@ A Spring Boot Modulith-style modular monolith for Laravel 12 and 13. Organize yo
 | `ApplicationModules::verify()` | `php artisan module:boundaries` — public API by convention, everything else internal |
 | `spring-boot-maven-plugin` scaffolding | `php artisan module:make` (aliases `make:module`, `moduler:make-module`) plus `--module` on every Laravel generator |
 
+## Documentation
+
+This README covers the essentials. Detailed guides live in the [docs](docs) directory:
+
+- [Installation & setup](docs/installation.md)
+- [Creating modules](docs/creating-modules.md)
+- [Auto-discovery](docs/auto-discovery.md)
+- [Generating resources in a module](docs/generating-resources.md)
+- [Event-driven communication](docs/event-driven-communication.md)
+- [Module administration](docs/module-administration.md)
+- [Multi-tenancy](docs/multi-tenancy.md)
+- [Module boundaries](docs/module-boundaries.md)
+- [Configuration reference](docs/configuration.md)
+
+## Requirements
+
+- PHP 8.3 or higher
+- Laravel 12.x or 13.x
+
 ## Installation
 
 ```bash
@@ -23,10 +42,10 @@ php artisan vendor:publish --tag=laravel-modular-config
 ## Create a module
 
 ```bash
-php artisan module:make School
+php artisan module:make Product
 # aliases:
-php artisan make:module School
-php artisan moduler:make-module School
+php artisan make:module Product
+php artisan moduler:make-module Product
 
 php artisan module:list // lists each module and its Enabled/Disabled status
 ```
@@ -34,10 +53,10 @@ php artisan module:list // lists each module and its Enabled/Disabled status
 Modules live in `Modules/` by default. A module uses the same layout as a Laravel application; the module directory is the equivalent of the application's `app` directory:
 
 ```text
-Modules/School/
+Modules/Product/
 ├── Broadcasting/
 ├── Casts/
-├── config/school.php          merged into config('school.*')
+├── config/product.php         merged into config('product.*')
 ├── Console/Commands/          auto-registered in console
 ├── Contracts/                 public API: interfaces other modules may use
 ├── Enums/                     public API
@@ -61,7 +80,7 @@ Modules/School/
 └── module.php
 ```
 
-The module root and namespace are configurable. The package registers the configured namespace with the module root at runtime, so a generated `School` controller is available as `Modules\School\Http\Controllers\SchoolController`.
+The module root and namespace are configurable. The package registers the configured namespace with the module root at runtime, so a generated `Product` controller is available as `Modules\Product\Http\Controllers\ProductController`.
 
 ## Auto-discovery (convention over configuration)
 
@@ -77,7 +96,7 @@ For every enabled module, Laravel Modular automatically wires the following — 
 | `Observers/{Model}Observer.php` | `Models\{Model}::observe({Model}Observer)` |
 | `routes/web.php`, `routes/api.php` | loaded as module routes |
 | `database/migrations` | registered with the migrator |
-| `resources/views`, `resources/lang` | loaded namespaced by module (`school::welcome`, `school::messages.*`) |
+| `resources/views`, `resources/lang` | loaded namespaced by module (`product::welcome`, `product::messages.*`) |
 
 Module service providers are registered during the container's registration phase, so they behave exactly like any other provider — their own `boot()` runs and they can rely on the full lifecycle.
 
@@ -103,10 +122,10 @@ Every aspect can be turned off individually:
 
 ```php
 return [
-    'name' => 'School',
-    'providers' => [Modules\School\Providers\ModuleServiceProvider::class],
+    'name' => 'Product',
+    'providers' => [Modules\Product\Providers\ModuleServiceProvider::class],
     'listeners' => [
-        StudentEnrolled::class => [SendWelcomeMessage::class],
+        OrderPlaced::class => [ReduceStock::class],
         'Modules\Billing\Events\*' => [RecalculateAccountBalance::class], // wildcards work
     ],
 ];
@@ -278,6 +297,33 @@ The published `config/laravel-modular.php` file contains the following options:
 
 The optional tenant resolver is used when dispatching `ModuleBooting` and `ModuleBooted` lifecycle events. It lets an application initialize modules for its current tenant without coupling the package to a tenancy package.
 
+## Testing
+
+```bash
+composer test          # the full suite: phpstan, lint check, type coverage, pest
+composer analyse       # static analysis only
+composer lint          # fix code style with Pint
+composer lint:check    # verify code style without changing files
+composer test:types    # type coverage
+composer test:unit     # Pest tests
+```
+
+## Changelog
+
+Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
+
+## Contributing
+
+Please see [CONTRIBUTING](.github/CONTRIBUTING.md) for details.
+
+## Security
+
+Please review [our security policy](.github/SECURITY.md) on how to report security vulnerabilities.
+
+## Credits
+
+- [laltu](https://github.com/laltu-das)
+
 ## License
 
-MIT
+The MIT License (MIT). Please see [License File](LICENSE.md) for more information.

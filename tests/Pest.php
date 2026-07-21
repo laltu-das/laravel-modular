@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use LaravelModular\LaravelModular\Tests\NoDiscoveryTestCase;
-use LaravelModular\LaravelModular\Tests\TenantTestCase;
+use LaravelModular\LaravelModular\Tests\Concerns\WithTenancy;
+use LaravelModular\LaravelModular\Tests\Concerns\WithoutAutoDiscovery;
 use LaravelModular\LaravelModular\Tests\TestCase;
 
 uses(TestCase::class)->in(__DIR__);
-uses(TenantTestCase::class)->in('Feature/Tenancy');
-uses(NoDiscoveryTestCase::class)->in('Feature/WithoutDiscovery');
+uses(WithTenancy::class)->in('Feature/Tenancy');
+uses(WithoutAutoDiscovery::class)->in('Feature/WithoutDiscovery');

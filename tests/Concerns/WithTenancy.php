@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace LaravelModular\LaravelModular\Tests;
+namespace LaravelModular\LaravelModular\Tests\Concerns;
 
 use LaravelModular\LaravelModular\Tests\Fixtures\Tenancy\FakeTenantResolver;
 use LaravelModular\LaravelModular\Tests\Fixtures\Tenancy\NoBillingTenantVoter;
@@ -11,7 +11,7 @@ use LaravelModular\LaravelModular\Tests\Fixtures\Tenancy\NoBillingTenantVoter;
  * Boots the package with a tenant resolver and a voter that rejects Billing,
  * simulating per-tenant module enablement.
  */
-abstract class TenantTestCase extends TestCase
+trait WithTenancy
 {
     protected function getEnvironmentSetUp($app): void
     {
