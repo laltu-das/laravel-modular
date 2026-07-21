@@ -12,8 +12,8 @@ php artisan vendor:publish --tag=laravel-modular-config
 ## Create a module
 
 ```bash
-php artisan moduler:make-module School
-php artisan moduler:list
+php artisan make:module School
+php artisan module:list
 ```
 
 Modules live in `Modules/` by default. A module uses the same layout as a Laravel application; the module directory is the equivalent of the application's `app` directory:
@@ -83,7 +83,7 @@ All supported Laravel generators gain a `--module` option. Without `--module`, L
 ### Example
 
 ```bash
-php artisan moduler:make-module Category
+php artisan make:module Category
 php artisan make:controller CategoryController --module=Category
 php artisan make:model Category --module=Category -m -f -s
 php artisan make:request CreateCategoryRequest --module=Category

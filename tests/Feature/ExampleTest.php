@@ -43,7 +43,7 @@ it('creates a module using Laravel directories', function () {
     config(['laravel-modular.path' => $path]);
 
     try {
-        $this->artisan('moduler:make-module', ['name' => 'School'])
+        $this->artisan('make:module', ['name' => 'School'])
             ->expectsOutputToContain('Module [School] created successfully.')
             ->assertSuccessful();
 
