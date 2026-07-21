@@ -5,27 +5,27 @@ A module is a directory below the configured module path (`Modules/` by default)
 ## Scaffold a module
 
 ```bash
-php artisan module:make School
+php artisan module:make Product
 # aliases:
-php artisan make:module School
-php artisan moduler:make-module School
+php artisan make:module Product
+php artisan moduler:make-module Product
 ```
 
-The command is idempotent by default: re-running it for an existing module fails with `Module [School] already exists.` Pass `--force` to overwrite:
+The command is idempotent by default: re-running it for an existing module fails with `Module [Product] already exists.` Pass `--force` to overwrite:
 
 ```bash
-php artisan module:make School --force
+php artisan module:make Product --force
 ```
 
-The generated module contains the conventional directory tree, a `module.php` manifest, a `Providers/ModuleServiceProvider.php`, empty `routes/web.php` and `routes/api.php` files, and a module config file (`config/school.php`).
+The generated module contains the conventional directory tree, a `module.php` manifest, a `Providers/ModuleServiceProvider.php`, empty `routes/web.php` and `routes/api.php` files, and a module config file (`config/product.php`).
 
 ## Directory layout
 
 ```text
-Modules/School/
-├── Broadcasting/               # broadcast channels (make:channel --module=School)
+Modules/Product/
+├── Broadcasting/               # broadcast channels (make:channel --module=Product)
 ├── Casts/                      # Eloquent casts
-├── config/school.php           # merged into config('school.*')
+├── config/product.php          # merged into config('product.*')
 ├── Console/Commands/           # auto-registered in console
 ├── Contracts/                  # public API: interfaces other modules may use
 ├── Enums/                      # public API
@@ -49,7 +49,7 @@ Modules/School/
 └── module.php
 ```
 
-The module directory is the equivalent of the application's `app` directory: a generated `School` controller is `Modules\School\Http\Controllers\SchoolController`.
+The module directory is the equivalent of the application's `app` directory: a generated `Product` controller is `Modules\Product\Http\Controllers\ProductController`.
 
 ## The manifest: module.php
 
@@ -61,11 +61,11 @@ Every key of `module.php` is optional. Auto-discovery means most modules never n
 declare(strict_types=1);
 
 return [
-    'name' => 'School',
-    'providers' => [Modules\School\Providers\ModuleServiceProvider::class],
+    'name' => 'Product',
+    'providers' => [Modules\Product\Providers\ModuleServiceProvider::class],
     'commands' => [],    // extra Artisan commands not in Console/Commands
     'listeners' => [     // extra listeners not covered by Listeners/ auto-discovery
-        StudentEnrolled::class => [SendWelcomeMessage::class],
+        OrderPlaced::class => [ReduceStock::class],
         'Modules\Billing\Events\*' => [RecalculateAccountBalance::class], // wildcards work
     ],
 ];
@@ -79,4 +79,4 @@ The package registers the configured module namespace (default `Modules\`) with 
 
 ## Disabling a module
 
-Drop an empty `.disabled` marker file in the module directory (or run `php artisan module:disable School`) and the module is skipped entirely — see [module administration](module-administration.md).
+Drop an empty `.disabled` marker file in the module directory (or run `php artisan module:disable Product`) and the module is skipped entirely — see [module administration](module-administration.md).

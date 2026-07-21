@@ -47,22 +47,22 @@ it('creates a module using Laravel directories', function () {
     config(['laravel-modular.path' => $path]);
 
     try {
-        $this->artisan('make:module', ['name' => 'School'])
-            ->expectsOutputToContain('Module [School] created successfully.')
+        $this->artisan('make:module', ['name' => 'Product'])
+            ->expectsOutputToContain('Module [Product] created successfully.')
             ->assertSuccessful();
 
-        expect(File::exists($path.'/School/Http/Controllers'))
+        expect(File::exists($path.'/Product/Http/Controllers'))
             ->toBeTrue()
-            ->and(File::exists($path.'/School/Models'))
+            ->and(File::exists($path.'/Product/Models'))
             ->toBeTrue()
-            ->and(File::exists($path.'/School/config/school.php'))
+            ->and(File::exists($path.'/Product/config/product.php'))
             ->toBeTrue()
-            ->and(File::exists($path.'/School/Providers/ModuleServiceProvider.php'))
+            ->and(File::exists($path.'/Product/Providers/ModuleServiceProvider.php'))
             ->toBeTrue()
-            ->and(File::get($path.'/School/Providers/ModuleServiceProvider.php'))
-            ->toContain('namespace Modules\\School\\Providers;')
-            ->and(File::get($path.'/School/module.php'))
-            ->toContain('Modules\\School\\Providers\\ModuleServiceProvider::class');
+            ->and(File::get($path.'/Product/Providers/ModuleServiceProvider.php'))
+            ->toContain('namespace Modules\\Product\\Providers;')
+            ->and(File::get($path.'/Product/module.php'))
+            ->toContain('Modules\\Product\\Providers\\ModuleServiceProvider::class');
     } finally {
         File::deleteDirectory($path);
     }

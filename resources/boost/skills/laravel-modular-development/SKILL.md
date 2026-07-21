@@ -25,21 +25,21 @@ php artisan vendor:publish --tag=laravel-modular-config
 ## Create a module
 
 ```bash
-php artisan module:make School
+php artisan module:make Product
 # aliases: make:module, moduler:make-module
 php artisan module:list
 ```
 
-A module is created below `Modules/School` by default. Its folders mirror the folders in a Laravel application, such as `Http/Controllers`, `Models`, `Providers`, `Listeners`, `Jobs`, `Events`, `config`, `database`, `resources`, and `routes`.
+A module is created below `Modules/Product` by default. Its folders mirror the folders in a Laravel application, such as `Http/Controllers`, `Models`, `Providers`, `Listeners`, `Jobs`, `Events`, `config`, `database`, `resources`, and `routes`.
 
 ## Generate code
 
 Pass `--module` to any supported Laravel generator:
 
 ```bash
-php artisan make:controller SchoolController --module=School
-php artisan make:model School --module=School -m -f -s
-php artisan make:request StoreSchoolRequest --module=School
+php artisan make:controller ProductController --module=Product
+php artisan make:model Product --module=Product -m -f -s
+php artisan make:request StoreProductRequest --module=Product
 ```
 
 Without `--module`, generators keep Laravel's standard behavior. Use the generated module's `Providers/ModuleServiceProvider.php` for module-specific bindings and boot logic.

@@ -29,8 +29,8 @@ This copies `config/laravel-modular.php` into your application. See the [configu
 
 ```bash
 php artisan module:list   # lists discovered modules and their status (empty list at first)
-php artisan module:make School
-php artisan module:list   # School now shows as Enabled
+php artisan module:make Product
+php artisan module:list   # Product now shows as Enabled
 ```
 
 Modules are created below `base_path('Modules')` by default, namespaced under `Modules\`. Both the location and the namespace are configurable — the package registers the configured namespace at runtime, so no `composer.json` or `composer dump-autoload` changes are needed.

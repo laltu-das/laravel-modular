@@ -24,7 +24,7 @@ The directory that contains the modules. Every directory directly below it is a 
 
 **Default:** `'Modules'`
 
-The PSR-4 namespace prefix for modules. A module `School` gets the namespace `Modules\School`. The package registers this namespace at runtime, so no Composer autoload changes are needed. Change both `path` and `namespace` together (e.g. `path` → `app/Modules`, `namespace` → `App\Modules`).
+The PSR-4 namespace prefix for modules. A module `Product` gets the namespace `Modules\Product`. The package registers this namespace at runtime, so no Composer autoload changes are needed. Change both `path` and `namespace` together (e.g. `path` → `app/Modules`, `namespace` → `App\Modules`).
 
 ## `tenant_resolver`
 

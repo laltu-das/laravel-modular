@@ -14,7 +14,7 @@ Convention over configuration, like Spring Boot's classpath scanning: for every 
 | `Observers/{Model}Observer.php` | `Models\{Model}::observe({Model}Observer)` |
 | `routes/web.php`, `routes/api.php` | loaded as module routes |
 | `database/migrations` | registered with the migrator |
-| `resources/views`, `resources/lang` | loaded namespaced by module (`school::welcome`, `school::messages.*`) |
+| `resources/views`, `resources/lang` | loaded namespaced by module (`product::welcome`, `product::messages.*`) |
 
 Discovery details:
 
