@@ -1,0 +1,61 @@
+# TEMPORARY debugging workflow for the sandboxed agent (no local PHP runtime).
+# It runs the full verification matrix steps once and pushes the output back to
+# this branch under ci-output/. Removed before the PR is finalized.
+name: sandbox-debug
+
+on:
+  push:
+    branches:
+      - arena/019f8606-laravel-modular
+    paths-ignore:
+      - 'ci-output/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sandbox-debug-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.3
+          extensions: dom, curl, libxml, mbstring, zip, fileinfo, sqlite, pdo_sqlite, bcmath, intl
+          ini-values: error_reporting=E_ALL
+          tools: composer:v2
+          coverage: none
+
+      - name: Install dependencies
+        run: |
+          composer require "laravel/framework:12.*" "orchestra/testbench:10.*" --no-interaction --no-update
+          composer update --prefer-stable --prefer-dist --no-interaction --no-progress --no-scripts
+          composer run prepare
+
+      - name: Collect verification output
+        run: |
+          mkdir -p ci-output
+          { echo '== PHPSTAN =='; composer analyse; } > ci-output/phpstan.txt 2>&1 || true
+          { echo '== PINT =='; vendor/bin/pint --test --parallel; } > ci-output/pint.txt 2>&1 || true
+          { echo '== TYPE COVERAGE =='; vendor/bin/pest --type-coverage --min=100; } > ci-output/types.txt 2>&1 || true
+          { echo '== PEST =='; vendor/bin/pest; } > ci-output/pest.txt 2>&1 || true
+
+      - name: Push results
+        run: |
+          git config user.name "sandbox-debug[bot]"
+          git config user.email "sandbox-debug[bot]@users.noreply.github.com"
+          git add ci-output
+          git commit -m "ci: sandbox verification output [skip ci]" || echo "no changes to output"
+          git push origin HEAD:${{ github.ref_name }}
