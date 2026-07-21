@@ -9,7 +9,10 @@ use LaravelModular\LaravelModular\Contracts\ModuleEventBus;
 
 final readonly class LaravelEventBus implements ModuleEventBus
 {
-    public function __construct(private Dispatcher $events) {}
+    public function __construct(private Dispatcher $events)
+    {
+        //
+    }
 
     public function publish(object $event): object
     {

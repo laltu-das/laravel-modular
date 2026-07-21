@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace LaravelModular\LaravelModular\Console\Commands;
 
-use LaravelModular\LaravelModular\Support\Config;
-
 use Illuminate\Support\Str;
+use LaravelModular\LaravelModular\Support\Config;
 
 final class ModelMakeCommand extends \Illuminate\Foundation\Console\ModelMakeCommand
 {

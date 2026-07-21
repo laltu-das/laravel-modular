@@ -8,5 +8,8 @@ use LaravelModular\LaravelModular\Support\Module;
 
 final readonly class ModuleBooting
 {
-    public function __construct(public Module $module, public mixed $tenant = null) {}
+    public function __construct(public Module $module, public mixed $tenant = null)
+    {
+        //
+    }
 }
