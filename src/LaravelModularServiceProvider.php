@@ -24,7 +24,6 @@ use LaravelModular\LaravelModular\Console\Commands\ListenerMakeCommand;
 use LaravelModular\LaravelModular\Console\Commands\MailMakeCommand;
 use LaravelModular\LaravelModular\Console\Commands\MakeModuleCommand;
 use LaravelModular\LaravelModular\Console\Commands\MiddlewareMakeCommand;
-use LaravelModular\LaravelModular\Console\Commands\MigrationMakeCommand;
 use LaravelModular\LaravelModular\Console\Commands\ModelMakeCommand;
 use LaravelModular\LaravelModular\Console\Commands\ModuleListCommand;
 use LaravelModular\LaravelModular\Console\Commands\NotificationMakeCommand;
@@ -161,7 +160,6 @@ final class LaravelModularServiceProvider extends ServiceProvider
             ListenerMakeCommand::class => 'Illuminate\Foundation\Console\ListenerMakeCommand',
             MailMakeCommand::class => 'Illuminate\Foundation\Console\MailMakeCommand',
             MiddlewareMakeCommand::class => 'Illuminate\Routing\Console\MiddlewareMakeCommand',
-            MigrationMakeCommand::class => 'Illuminate\Database\Console\Migrations\MigrateMakeCommand',
             ModelMakeCommand::class => 'Illuminate\Foundation\Console\ModelMakeCommand',
             NotificationMakeCommand::class => 'Illuminate\Foundation\Console\NotificationMakeCommand',
             ObserverMakeCommand::class => 'Illuminate\Foundation\Console\ObserverMakeCommand',
