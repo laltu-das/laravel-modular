@@ -1,0 +1,17 @@
+<?php
+
+declare(strict_types=1);
+
+namespace LaravelModular\LaravelModular\Console\Commands;
+
+use Illuminate\Foundation\Console\EnumMakeCommand as BaseEnumMakeCommand;
+
+final class EnumMakeCommand extends BaseEnumMakeCommand
+{
+    use ModuleAwareGenerator;
+
+    protected function moduleDirectory(): string
+    {
+        return 'Domain/Enums';
+    }
+}

@@ -30,7 +30,7 @@ final class MakeModuleCommand extends Command
             return self::FAILURE;
         }
 
-        foreach (['Application/Commands', 'Application/Queries', 'Application/Listeners', 'Domain/Entities', 'Domain/Events', 'Domain/Services', 'Domain/ValueObjects', 'Infrastructure/Http/Controllers', 'Infrastructure/Http/Requests', 'Infrastructure/Jobs', 'Infrastructure/Persistence/Models', 'Infrastructure/Providers', 'Contracts', 'database/migrations', 'database/factories', 'database/seeders', 'routes', 'resources/views', 'resources/lang'] as $directory) {
+        foreach (['Application/Commands', 'Application/Queries', 'Application/Listeners', 'Application/Policies', 'Domain/Entities', 'Domain/Enums', 'Domain/Events', 'Domain/Services', 'Domain/ValueObjects', 'Infrastructure/Broadcasting', 'Infrastructure/Casts', 'Infrastructure/Exceptions', 'Infrastructure/Http/Controllers', 'Infrastructure/Http/Middleware', 'Infrastructure/Http/Requests', 'Infrastructure/Http/Resources', 'Infrastructure/Jobs', 'Infrastructure/Mail', 'Infrastructure/Notifications', 'Infrastructure/Observers', 'Infrastructure/Persistence/Models', 'Infrastructure/Persistence/Scopes', 'Infrastructure/Providers', 'Infrastructure/Rules', 'Infrastructure/View/Components', 'Contracts', 'database/migrations', 'database/factories', 'database/seeders', 'routes', 'resources/views', 'resources/lang', 'tests'] as $directory) {
             $this->files->ensureDirectoryExists($root.'/'.$directory);
         }
         $namespace = trim(Config::string('laravel-modular.namespace', 'Domains'), '\\').'\\'.$name;
