@@ -1,85 +1,124 @@
-<div align="center">
-    <h1>Laravel Modular</h1>
-</div>
+# Laravel Modular
 
-<p align="center">
-    <a href="https://packagist.org/packages/laltu/laravel-modular"><img src="https://img.shields.io/packagist/v/laltu/laravel-modular.svg?style=flat-square" alt="Packagist"></a>
-    <a href="https://packagist.org/packages/laltu/laravel-modular"><img src="https://img.shields.io/packagist/php-v/laltu/laravel-modular.svg?style=flat-square" alt="PHP from Packagist"></a>
-    <a href="https://packagist.org/packages/laltu/laravel-modular"><img src="https://badge.laravel.cloud/badge/laltu/laravel-modular?style=flat" alt="Laravel versions"></a>
-    <a href="https://github.com/laltu/laravel-modular/actions"><img alt="GitHub Workflow Status (main)" src="https://img.shields.io/github/actions/workflow/status/laltu/laravel-modular/tests.yml?branch=main&label=Tests&style=flat-square"></a>
-    <a href="https://packagist.org/packages/laltu/laravel-modular"><img src="https://img.shields.io/packagist/dt/laltu/laravel-modular.svg?style=flat-square" alt="Total Downloads"></a>
-</p>
-
-
+A lightweight, convention-first modular-monolith package for Laravel 12/13. Organize code by business capability, keep domain internals isolated, and let each module own its routes, migrations, providers, listeners and resources.
 
 ## Installation
 
-You can install the package via Composer:
-
 ```bash
 composer require laltu/laravel-modular
+php artisan vendor:publish --tag=laravel-modular-config
 ```
 
-You may publish all of the package's resources at once:
+## Create a module
 
 ```bash
-php artisan vendor:publish --tag="laravel-modular"
+php artisan moduler:make-module School
+php artisan moduler:list
 ```
 
-Or, you may publish each resource individually:
+Modules live in `Domains/` by default and use a DDD-friendly layout:
 
-### Publishing the Configuration File
+```text
+Domains/School/
+├── Application/{Commands,Queries,Listeners}
+├── Contracts/                         # convention-based public API
+├── Domain/{Entities,Events,Services,ValueObjects}
+├── Infrastructure/
+│   ├── Http/{Controllers,Requests}
+│   ├── Jobs/
+│   ├── Persistence/Models/
+│   └── Providers/ModuleServiceProvider.php
+├── database/{migrations,factories,seeders}
+├── resources/{views,lang}
+├── routes/{web,api}.php
+└── module.php
+```
+
+The package registers the `Domains\\` PSR-4 prefix at runtime. The root path and namespace are configurable.
+
+## Generate resources in a module
+
+The normal Laravel generators gain a `--module` option:
+
+### Category module
 
 ```bash
-php artisan vendor:publish --tag="laravel-modular-config"
+php artisan moduler:make-module Category
+php artisan make:controller CategoryController --module=Category
+php artisan make:model Category --module=Category -m -f -s
+php artisan make:request CreateCategoryRequest --module=Category
+php artisan make:request UpdateCategoryRequest --module=Category
+php artisan make:job ProcessCategoryImport --module=Category
+php artisan make:event CategoryCreated --module=Category
+php artisan make:policy CategoryPolicy --module=Category
 ```
 
-### Publishing and Running the Migrations
+### Product module
 
 ```bash
-php artisan vendor:publish --tag="laravel-modular-migrations"
-php artisan migrate
+php artisan moduler:make-module Product
+php artisan make:controller ProductController --module=Product
+php artisan make:model Product --module=Product -m -f -s
+php artisan make:request CreateProductRequest --module=Product
+php artisan make:request UpdateProductRequest --module=Product
+php artisan make:job SyncProductStock --module=Product
+php artisan make:event ProductCreated --module=Product
+php artisan make:event ProductStockUpdated --module=Product
+php artisan make:policy ProductPolicy --module=Product
 ```
 
-### Publishing the Views
+Controllers, requests, jobs and models are placed under Infrastructure; events under Domain; and policies under Application. Existing generator behavior is unchanged when `--module` is omitted.
 
-```bash
-php artisan vendor:publish --tag="laravel-modular-views"
+For module models, `-m`, `-f`, and `-s` place the migration, factory, and seeder in that module's `database/` directories instead of the application's global database directory.
+
+## Auto-discovery
+
+Every enabled directory directly below `Domains/` is discovered. Add a `.disabled` file to disable one. For each module Laravel Modular automatically loads:
+
+- `routes/web.php` and `routes/api.php`
+- `database/migrations`
+- namespaced views (`school::...`) and translations
+- providers, commands and event listeners declared by `module.php`
+
+```php
+return [
+    'name' => 'School',
+    'providers' => [Domains\School\Infrastructure\Providers\ModuleServiceProvider::class],
+    'commands' => [],
+    'listeners' => [
+        StudentEnrolled::class => [SendWelcomeMessage::class],
+    ],
+];
 ```
 
-### Publishing the Translations
+## Events and module boundaries
 
-```bash
-php artisan vendor:publish --tag="laravel-modular-lang"
+Depend on `ModuleEventBus` rather than another module's implementation:
+
+```php
+use LaravelModular\LaravelModular\Contracts\ModuleEventBus;
+
+$bus->publish(new StudentEnrolled($studentId));
 ```
 
-### Publishing the Public Assets
+`Contracts`, `Application`, and `Domain` are public by convention. `LaravelModular::isPublic($class)` can be used by architecture tests to reject dependencies on another module's Infrastructure classes. Configure `public_directories` to tighten that policy.
 
-```bash
-php artisan vendor:publish --tag="laravel-modular-assets"
+## Multi-tenancy
+
+Implement `TenantResolver` and set its class in `tenant_resolver` config. The current tenant is included in `ModuleBooting` and `ModuleBooted`, allowing tenant-aware modules or existing TenantContext implementations to initialize without coupling this package to a tenancy vendor.
+
+```php
+use LaravelModular\LaravelModular\Contracts\TenantResolver;
+
+final class CurrentTenantResolver implements TenantResolver
+{
+    public function current(): mixed
+    {
+        return app(TenantContext::class)->tenant();
+    }
+}
 ```
-
-## Usage
-
-<!-- Add a basic usage example here. -->
-
-## Changelog
-
-Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
-
-## Contributing
-
-Thank you for considering contributing to Laravel Modular! Please review our [contributing guide](.github/CONTRIBUTING.md) to get started.
-
-## Security Vulnerabilities
-
-Please review [our security policy](.github/SECURITY.md) on how to report security vulnerabilities.
-
-## Credits
-
-- [laltu](https://github.com/laltu)
-- [All Contributors](../../contributors)
 
 ## License
 
-Laravel Modular is open-sourced software licensed under the [MIT license](LICENSE.md).
+MIT
