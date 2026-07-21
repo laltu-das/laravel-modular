@@ -71,7 +71,9 @@ final class LaravelModularServiceProvider extends ServiceProvider
             foreach ((array) ($manifest['listeners'] ?? []) as $event => $listeners) {
                 if (! is_string($event)) continue;
                 foreach ((array) $listeners as $listener) {
-                    if (is_string($listener)) $this->app->make(Dispatcher::class)->listen($event, $listener);
+                    if (is_string($listener) && class_exists($listener)) {
+                        $this->app->make(Dispatcher::class)->listen($event, $listener);
+                    }
                 }
             }
             if ($module->has('routes/web.php')) $this->loadRoutesFrom($module->path('routes/web.php'));

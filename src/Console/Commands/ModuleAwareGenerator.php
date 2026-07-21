@@ -17,7 +17,7 @@ trait ModuleAwareGenerator
     protected function qualifyClass(mixed $name): string
     {
         if (! $this->option('module')) return parent::qualifyClass($name);
-        $name = ltrim(is_string($name) ? $name : '', '\\/');
+        $name = ltrim($name, '\\/');
         $module = Str::studly($this->moduleOption());
         $root = trim(Config::string('laravel-modular.namespace', 'Domains'), '\\');
         $directory = str_replace('/', '\\', $this->moduleDirectory());
@@ -31,9 +31,7 @@ trait ModuleAwareGenerator
         $base = rtrim(Config::string('laravel-modular.path', base_path('Domains')), '/').'/'.$module;
         if (! is_dir($base)) throw new \InvalidArgumentException("Module [{$module}] does not exist. Run moduler:make-module first.");
         $prefix = trim(Config::string('laravel-modular.namespace', 'Domains'), '\\').'\\'.$module.'\\';
-        $class = is_string($name) ? $name : '';
-
-        return $base.'/'.str_replace('\\', '/', Str::after($class, $prefix)).'.php';
+        return $base.'/'.str_replace('\\', '/', Str::after($name, $prefix)).'.php';
     }
 
     private function moduleOption(): string
