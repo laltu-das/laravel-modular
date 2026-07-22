@@ -23,10 +23,9 @@ final readonly class Module
 
     public function class(string $relative): string
     {
-        return $this->namespace.'\\'.str_replace('/', '\\', trim($relative, '/'));
+        return $this->namespace.'\'.str_replace('/', '\', trim($relative, '/'));
     }
 
-    /** @return array<string, mixed> */
     public function exists(): bool
     {
         return is_dir($this->path);

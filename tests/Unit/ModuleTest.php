@@ -17,7 +17,7 @@ it('resolves module-relative paths and classes', function () {
 });
 
 it('discovers modules and their disabled state', function () {
-    $repository = new ModuleRepository(new Filesystem, __DIR__.'/../Fixtures/Modules', 'Modules');
+    $repository = new ModuleRepository(new Filesystem(), __DIR__.'/../Fixtures/Modules', 'Modules');
 
     expect(array_keys($repository->all()))->toBe(['Billing', 'Catalog', 'Inventory', 'Notifications', 'Orders'])
         ->and(array_keys($repository->all(true)))->toBe(['Billing', 'Catalog', 'Inventory', 'Legacy', 'Notifications', 'Orders'])
@@ -27,7 +27,7 @@ it('discovers modules and their disabled state', function () {
 });
 
 it('reads module manifests', function () {
-    $repository = new ModuleRepository(new Filesystem, __DIR__.'/../Fixtures/Modules', 'Modules');
+    $repository = new ModuleRepository(new Filesystem(), __DIR__.'/../Fixtures/Modules', 'Modules');
 
     expect($repository->find('Catalog')->manifest())->toBe(['name' => 'Catalog']);
 });
