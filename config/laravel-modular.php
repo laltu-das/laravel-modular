@@ -65,4 +65,61 @@ return [
         'translations' => true,  // {Module}/resources/lang (namespaced by module)
         'views' => true,         // {Module}/resources/views (namespaced by module)
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Inertia.js (optional)
+    |--------------------------------------------------------------------------
+    |
+    | Module-aware Inertia rendering with SSR scaffolding.
+    */
+    'inertia' => [
+        'enabled' => false,
+        'ssr_enabled' => false,
+        'version' => '1.0.0',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | API Features
+    |--------------------------------------------------------------------------
+    */
+    'api' => [
+        'enabled' => true,
+        'prefix' => 'api',
+        'version' => 'v1',
+        'middleware' => ['api'],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Module Caching
+    |--------------------------------------------------------------------------
+    */
+    'cache' => [
+        'enabled' => true,
+        'default_store' => 'default',
+        'ttl' => 3600,
+        'tags_enabled' => false,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Module Middleware Stacks
+    |--------------------------------------------------------------------------
+    */
+    'middleware' => [
+        'enabled' => true,
+        'global_stack' => ['api', 'throttle:api'],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Module Broadcasting
+    |--------------------------------------------------------------------------
+    */
+    'broadcasting' => [
+        'enabled' => false,
+        'default_channel' => 'modular',
+    ],
 ];

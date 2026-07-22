@@ -1,0 +1,29 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{namespace}};
+
+use Illuminate\Http\Request;
+use Laltu\Modular\Api\ApiResponse;
+
+final class {{class}} extends Controller
+{
+    public function index(Request $request)
+    {
+        return ApiResponse::make()
+            ->module('{{module}}')
+            ->message('List from module {{module}}')
+            ->success([
+                'items' => [],
+            ]);
+    }
+
+    public function store(Request $request)
+    {
+        return ApiResponse::make()
+            ->status(201)
+            ->message('Created in module {{module}}')
+            ->success();
+    }
+}
