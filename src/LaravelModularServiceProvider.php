@@ -14,6 +14,7 @@ use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Laltu\Modular\Boundaries\ModuleBoundaryInspector;
+use Laltu\Modular\Communication\CommunicationServiceProvider;
 use Laltu\Modular\Console\Commands\CastMakeCommand;
 use Laltu\Modular\Console\Commands\ChannelMakeCommand;
 use Laltu\Modular\Console\Commands\ComponentMakeCommand;
@@ -52,7 +53,6 @@ use Laltu\Modular\Console\Commands\TestMakeCommand;
 use Laltu\Modular\Console\Commands\ViewMakeCommand;
 use Laltu\Modular\Contracts\TenantModuleVoter;
 use Laltu\Modular\Contracts\TenantResolver;
-use Laltu\Modular\Communication\CommunicationServiceProvider;
 use Laltu\Modular\Discovery\ListenerDiscovery;
 use Laltu\Modular\Discovery\ModuleClassDiscovery;
 use Laltu\Modular\Discovery\ModuleRepository;
@@ -106,17 +106,24 @@ final class LaravelModularServiceProvider extends ServiceProvider
             $app->make(Filesystem::class),
         ));
 
-        $this->app->singleton(Laltu\Modular::class, fn (Application $app): LaravelModular => new LaravelModular(
+        if (! class_exists(\Laltu\Modular::class, false)) {
+            class_alias(LaravelModular::class, \Laltu\Modular::class);
+        }
+
+        $this->app->singleton(LaravelModular::class, fn (Application $app): LaravelModular => new LaravelModular(
+            $app,
             $app->make(ModuleRepository::class),
             $app->make(CurrentTenant::class),
             $app->bound(TenantModuleVoter::class) ? $app->make(TenantModuleVoter::class) : null,
             $app->make(Dispatcher::class),
         ));
 
+        $this->app->alias(LaravelModular::class, \Laltu\Modular::class);
+
         // Register communication services (synchronous API + asynchronous messaging)
         $this->app->register(CommunicationServiceProvider::class);
 
-        $this->registerModules($this->app->make(ModuleRepository::class), $this->app->make(Laltu\Modular::class));
+        $this->registerModules($this->app->make(ModuleRepository::class), $this->app->make(LaravelModular::class));
     }
 
     public function boot(ModuleRepository $repository, LaravelModular $modular): void

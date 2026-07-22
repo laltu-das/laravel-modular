@@ -4,41 +4,41 @@ declare(strict_types=1);
 
 namespace Laltu\Modular\Console\Commands;
 
+use Closure;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Queue\Factory as QueueFactory;
 use Illuminate\Contracts\Queue\Job;
-use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Str;
+use Laltu\Modular\Communication\Asynchronous\Message;
 use Laltu\Modular\Communication\Asynchronous\MessageBus;
 use Laltu\Modular\Communication\Asynchronous\MessageJob;
-use Symfony\Component\Console\Attribute\AsCommand;
-use Symfony\Component\Console\Input\InputOption;
+use ReflectionClass;
 
-#[AsCommand(name: 'message:consume', description: 'Consume messages and dispatch to registered handlers')]
 final class MessageConsumeCommand extends Command
 {
+    protected $signature = 'message:consume
+        {--connection= : Queue connection to use (default: configured default)}
+        {--queue= : Specific queue to consume (default: all subscribed queues)}
+        {--timeout=0 : Timeout in seconds (0 = infinite)}
+        {--memory=128 : Memory limit in MB (0 = unlimited)}
+        {--sleep=3 : Seconds to sleep when no job is available}';
+
+    protected $description = 'Consume messages and dispatch to registered handlers';
+
     public function __construct(
-        private MessageBus $messageBus,
-        private QueueFactory $queue,
+        private readonly MessageBus $messageBus,
+        private readonly QueueFactory $queue,
     ) {
         parent::__construct();
     }
 
-    protected function configure(): void
-    {
-        $this->addOption('connection', 'c', InputOption::VALUE_OPTIONAL, 'Queue connection to use', 'default');
-        $this->addOption('queue', 'q', InputOption::VALUE_OPTIONAL, 'Specific queue to consume (default: all subscribed queues)');
-        $this->addOption('timeout', 't', InputOption::VALUE_OPTIONAL, 'Timeout in seconds (0 = infinite)', '0');
-        $this->addOption('memory', 'm', InputOption::VALUE_OPTIONAL, 'Memory limit in MB (0 = unlimited)', '128');
-        $this->addOption('sleep', 's', InputOption::VALUE_OPTIONAL, 'Seconds to sleep when no job is available', '3');
-    }
-
     public function handle(): int
     {
-        $connection = $this->option('connection');
-        $specificQueue = $this->option('queue');
-        $timeout = (int) $this->option('timeout');
-        $memoryLimit = (int) $this->option('memory');
-        $sleep = (int) $this->option('sleep');
+        $connection = $this->nullableStringOption('connection');
+        $specificQueue = $this->nullableStringOption('queue');
+        $timeout = (int) $this->stringOption('timeout', '0');
+        $memoryLimit = (int) $this->stringOption('memory', '128');
+        $sleep = (int) $this->stringOption('sleep', '3');
 
         if ($memoryLimit > 0) {
             ini_set('memory_limit', $memoryLimit.'M');
@@ -47,38 +47,32 @@ final class MessageConsumeCommand extends Command
         $subscriptions = $this->messageBus->getSubscriptions();
 
         if ($subscriptions === []) {
-            $this->warn('No message subscriptions registered.');
+            $this->components->warn('No message subscriptions registered.');
 
             return self::SUCCESS;
         }
 
-        // Determine which queues to listen on
         $queues = $specificQueue !== null
             ? [$specificQueue]
-            : array_unique(array_map(
-                fn ($messageClass) => (new $messageClass())->channel(),
-                array_keys($subscriptions)
-            ));
+            : $this->queuesForSubscriptions(array_keys($subscriptions));
 
-        $this->info('Starting message consumer...');
-        $this->info('Queues: '.implode(', ', $queues));
-        $this->info('Connection: '.$connection);
+        $this->components->info('Starting message consumer...');
+        $this->line('Queues: '.implode(', ', $queues));
+        $this->line('Connection: '.($connection ?? 'default'));
 
         $startTime = time();
 
         while (true) {
             if ($timeout > 0 && (time() - $startTime) >= $timeout) {
-                $this->info('Timeout reached.');
+                $this->components->info('Timeout reached.');
 
                 return self::SUCCESS;
             }
 
-            $job = $this->queue->connection($connection)->pop($queues);
+            $job = $this->popFromQueues($connection, $queues);
 
             if ($job === null) {
-                if ($this->option('timeout') > 0) {
-                    sleep($sleep);
-                }
+                sleep(max(0, $sleep));
 
                 continue;
             }
@@ -87,25 +81,26 @@ final class MessageConsumeCommand extends Command
         }
     }
 
+    /**
+     * @param  array<class-string<Message>, list<class-string|Closure>>  $subscriptions
+     */
     private function processJob(Job $job, array $subscriptions): void
     {
         try {
-            $payload = $job->getRawBody();
-            $data = json_decode($payload, true);
+            $messageJob = $this->messageJobFromPayload($job);
 
-            if (! isset($data['job']) || ! $data['job'] instanceof MessageJob) {
-                $this->warn('Received non-message job, releasing.');
+            if (! $messageJob instanceof MessageJob) {
+                $this->components->warn('Received non-message job, releasing.');
                 $job->release();
 
                 return;
             }
 
-            $messageJob = $data['job'];
             $message = $messageJob->message;
-            $messageClass = get_class($message);
+            $messageClass = $message::class;
 
             if (! isset($subscriptions[$messageClass])) {
-                $this->warn("No handlers for message [{$messageClass}], deleting.");
+                $this->components->warn("No handlers for message [{$messageClass}], deleting.");
                 $job->delete();
 
                 return;
@@ -115,22 +110,111 @@ final class MessageConsumeCommand extends Command
 
             foreach ($handlers as $handler) {
                 if (is_string($handler) && class_exists($handler)) {
-                    // It's a job class - dispatch it with the message
                     $handlerJob = new $handler($message);
                     $this->queue->connection($message->connection())
                         ->pushOn($message->channel(), $handlerJob);
-                } elseif ($handler instanceof \Closure) {
-                    // It's a closure - execute it directly
+                } elseif ($handler instanceof Closure) {
                     $handler($message);
                 }
             }
 
             $job->delete();
-            $this->info("Processed [{$messageClass}] -> ".count($handlers).' handler(s)');
-
+            $this->components->info("Processed [{$messageClass}] -> ".count($handlers).' handler(s)');
         } catch (\Throwable $e) {
-            $this->error('Job failed: '.$e->getMessage());
-            $job->failed();
+            $this->components->error('Job failed: '.$e->getMessage());
+
+            if (method_exists($job, 'fail')) {
+                $job->fail($e);
+
+                return;
+            }
+
+            $job->release();
         }
+    }
+
+    /**
+     * @param  list<class-string<Message>>  $messageClasses
+     * @return list<string>
+     */
+    private function queuesForSubscriptions(array $messageClasses): array
+    {
+        $queues = [];
+
+        foreach ($messageClasses as $messageClass) {
+            $queues[] = $this->queueForMessage($messageClass);
+        }
+
+        return array_values(array_unique($queues));
+    }
+
+    /** @param  class-string<Message>  $messageClass */
+    private function queueForMessage(string $messageClass): string
+    {
+        if (is_subclass_of($messageClass, Message::class)) {
+            $reflection = new ReflectionClass($messageClass);
+            $constructor = $reflection->getConstructor();
+
+            if ($reflection->isInstantiable() && ($constructor === null || $constructor->getNumberOfRequiredParameters() === 0)) {
+                $message = $reflection->newInstance();
+
+                if ($message instanceof Message) {
+                    return $message->channel();
+                }
+            }
+        }
+
+        return Str::snake(class_basename($messageClass));
+    }
+
+    /** @param  list<string>  $queues */
+    private function popFromQueues(?string $connection, array $queues): ?Job
+    {
+        $queue = $this->queue->connection($connection);
+
+        foreach ($queues as $queueName) {
+            $job = $queue->pop($queueName);
+
+            if ($job instanceof Job) {
+                return $job;
+            }
+        }
+
+        return null;
+    }
+
+    private function messageJobFromPayload(Job $job): ?MessageJob
+    {
+        $payload = json_decode($job->getRawBody(), true);
+
+        if (! is_array($payload)) {
+            return null;
+        }
+
+        $command = $payload['data']['command'] ?? null;
+
+        if (is_string($command)) {
+            $unserialized = @unserialize($command);
+
+            return $unserialized instanceof MessageJob ? $unserialized : null;
+        }
+
+        $rawJob = $payload['job'] ?? null;
+
+        return $rawJob instanceof MessageJob ? $rawJob : null;
+    }
+
+    private function stringOption(string $name, string $default): string
+    {
+        $value = $this->option($name);
+
+        return is_string($value) && $value !== '' ? $value : $default;
+    }
+
+    private function nullableStringOption(string $name): ?string
+    {
+        $value = $this->option($name);
+
+        return is_string($value) && $value !== '' ? $value : null;
     }
 }

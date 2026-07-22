@@ -6,16 +6,16 @@ namespace Laltu\Modular\Console\Commands;
 
 use Illuminate\Console\Command;
 use Laltu\Modular\Communication\Synchronous\ModuleApi;
-use Laltu\Modular\LaravelModular;
-use Symfony\Component\Console\Attribute\AsCommand;
+use Laltu\Modular\Exceptions\ModuleNotFound;
 
-#[AsCommand(name: 'module:apis', description: 'List all public APIs exposed by modules')]
 final class ModuleApisCommand extends Command
 {
-    public function __construct(
-        private ModuleApi $moduleApi,
-        private LaravelModular $modular,
-    ) {
+    protected $signature = 'module:apis {--module= : Only list APIs for the given module}';
+
+    protected $description = 'List all public APIs exposed by modules';
+
+    public function __construct(private readonly ModuleApi $moduleApi)
+    {
         parent::__construct();
     }
 
@@ -23,7 +23,7 @@ final class ModuleApisCommand extends Command
     {
         $moduleFilter = $this->option('module');
 
-        if ($moduleFilter !== null) {
+        if (is_string($moduleFilter) && $moduleFilter !== '') {
             return $this->showModuleApis($moduleFilter);
         }
 
@@ -35,12 +35,11 @@ final class ModuleApisCommand extends Command
         $apis = $this->moduleApi->getAllApis();
 
         if ($apis === []) {
-            $this->info('No public APIs found.');
+            $this->components->info('No public APIs found.');
 
             return self::SUCCESS;
         }
 
-        $headers = ['Module', 'Interface', 'Implementation'];
         $rows = [];
 
         foreach ($apis as $moduleName => $moduleApis) {
@@ -49,7 +48,7 @@ final class ModuleApisCommand extends Command
             }
         }
 
-        $this->table($headers, $rows);
+        $this->table(['Module', 'Interface', 'Implementation'], $rows);
 
         return self::SUCCESS;
     }
@@ -58,27 +57,26 @@ final class ModuleApisCommand extends Command
     {
         try {
             $apis = $this->moduleApi->getModuleApis($moduleName);
-        } catch (\Laltu\Modular\Exceptions\ModuleNotFound) {
-            $this->error("Module [{$moduleName}] does not exist or is not enabled.");
+        } catch (ModuleNotFound) {
+            $this->components->error("Module [{$moduleName}] does not exist or is not enabled.");
 
             return self::FAILURE;
         }
 
         if ($apis === []) {
-            $this->info("Module [{$moduleName}] has no public APIs.");
+            $this->components->info("Module [{$moduleName}] has no public APIs.");
 
             return self::SUCCESS;
         }
 
-        $headers = ['Interface', 'Implementation'];
         $rows = [];
 
         foreach ($apis as $interface => $implementation) {
             $rows[] = [$interface, $implementation];
         }
 
-        $this->info("Public APIs for module [{$moduleName}]:");
-        $this->table($headers, $rows);
+        $this->components->info("Public APIs for module [{$moduleName}]:");
+        $this->table(['Interface', 'Implementation'], $rows);
 
         return self::SUCCESS;
     }

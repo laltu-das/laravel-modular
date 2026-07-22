@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Laltu\Modular\Communication\Asynchronous;
 
-use JsonSerializable;
-
 /**
  * Base implementation of the Message contract.
  *
@@ -39,9 +37,9 @@ abstract class BaseMessage implements Message
     public function channel(): string
     {
         $class = class_basename(static::class);
-        $class = preg_replace('/Message$/', '', $class);
+        $class = preg_replace('/Message$/', '', $class) ?? $class;
 
-        return strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $class));
+        return strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $class) ?? $class);
     }
 
     /**
@@ -69,11 +67,22 @@ abstract class BaseMessage implements Message
     }
 
     /**
+     * Get the queue name (alias for channel for Laravel Queue compatibility).
+     */
+    public function queue(): string
+    {
+        return $this->channel();
+    }
+
+    /**
      * Convert the message to an array for JSON serialization.
+     *
+     * @return array<string, mixed>
      */
     public function jsonSerialize(): array
     {
         $data = [];
+
         foreach ((new \ReflectionClass($this))->getProperties(\ReflectionProperty::IS_PUBLIC) as $prop) {
             $data[$prop->getName()] = $prop->getValue($this);
         }
@@ -83,6 +92,8 @@ abstract class BaseMessage implements Message
 
     /**
      * Create a message instance from an array (for deserialization).
+     *
+     * @param  array<string, mixed>  $data
      */
     public static function fromArray(array $data): static
     {

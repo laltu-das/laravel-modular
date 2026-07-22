@@ -5,7 +5,11 @@ declare(strict_types=1);
 namespace Laltu\Modular;
 
 use Closure;
+use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Events\Dispatcher;
+use Laltu\Modular\Communication\Asynchronous\Message;
+use Laltu\Modular\Communication\Asynchronous\MessageBus;
+use Laltu\Modular\Communication\Synchronous\ModuleApi;
 use Laltu\Modular\Contracts\TenantModuleVoter;
 use Laltu\Modular\Discovery\ModuleRepository;
 use Laltu\Modular\Exceptions\ModuleNotFound;
@@ -15,6 +19,7 @@ use Laltu\Modular\Support\Module;
 final readonly class LaravelModular
 {
     public function __construct(
+        private Container $container,
         private ModuleRepository $modules,
         private CurrentTenant $tenant,
         private ?TenantModuleVoter $voter,
@@ -98,5 +103,96 @@ final readonly class LaravelModular
     public function listen(string|array $events, Closure|string|null $listener = null): void
     {
         $this->events->listen($events, $listener);
+    }
+
+    /**
+     * Resolve a public API interface from any enabled module.
+     *
+     * @template T of object
+     * @param  class-string<T>  $interface
+     * @return T
+     */
+    public function api(string $interface): object
+    {
+        return $this->moduleApi()->resolve($interface);
+    }
+
+    /**
+     * Resolve a public API interface from a specific module.
+     *
+     * @template T of object
+     * @param  class-string<T>  $interface
+     * @return T
+     */
+    public function apiFrom(string $interface, string $moduleName): object
+    {
+        return $this->moduleApi()->resolveFromModule($interface, $moduleName);
+    }
+
+    /**
+     * Check if any enabled module has bound the given public API interface.
+     */
+    public function hasApi(string $interface): bool
+    {
+        return $this->moduleApi()->has($interface);
+    }
+
+    /**
+     * Get all public APIs across all enabled modules.
+     *
+     * @return array<string, array<string, string>>
+     */
+    public function allApis(): array
+    {
+        return $this->moduleApi()->getAllApis();
+    }
+
+    /**
+     * Find which enabled module declares the given public API interface.
+     */
+    public function getProviderModule(string $interface): ?string
+    {
+        return $this->moduleApi()->getProviderModule($interface);
+    }
+
+    /**
+     * Get the asynchronous message bus.
+     */
+    public function messageBus(): MessageBus
+    {
+        $messageBus = $this->container->make(MessageBus::class);
+
+        if (! $messageBus instanceof MessageBus) {
+            throw new \LogicException('The message bus service is not registered correctly.');
+        }
+
+        return $messageBus;
+    }
+
+    /**
+     * Publish a message to its configured channel.
+     */
+    public function publishMessage(Message $message): string
+    {
+        return $this->messageBus()->publish($message);
+    }
+
+    /**
+     * Publish a message to its configured channel after a delay.
+     */
+    public function publishMessageLater(Message $message, int $delay): string
+    {
+        return $this->messageBus()->publishLater($message, $delay);
+    }
+
+    private function moduleApi(): ModuleApi
+    {
+        $moduleApi = $this->container->make(ModuleApi::class);
+
+        if (! $moduleApi instanceof ModuleApi) {
+            throw new \LogicException('The module API service is not registered correctly.');
+        }
+
+        return $moduleApi;
     }
 }
