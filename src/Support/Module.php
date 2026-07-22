@@ -27,6 +27,16 @@ final readonly class Module
     }
 
     /** @return array<string, mixed> */
+    public function exists(): bool
+    {
+        return is_dir($this->path);
+    }
+
+    public function isDisabled(): bool
+    {
+        return $this->disabled || is_file($this->path.'/.disabled');
+    }
+
     public function manifest(): array
     {
         $file = $this->path('module.php');
