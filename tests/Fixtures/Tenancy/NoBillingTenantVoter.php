@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace LaravelModular\LaravelModular\Tests\Fixtures\Tenancy;
+namespace Laltu\Modular\Tests\Fixtures\Tenancy;
 
-use LaravelModular\LaravelModular\Contracts\TenantModuleVoter;
-use LaravelModular\LaravelModular\Support\Module;
+use Laltu\Modular\Contracts\TenantModuleVoter;
+use Laltu\Modular\Support\Module;
 
 final class NoBillingTenantVoter implements TenantModuleVoter
 {

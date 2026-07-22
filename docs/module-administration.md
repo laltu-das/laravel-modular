@@ -20,7 +20,7 @@ Creates an empty `.disabled` marker file inside the module. A disabled module is
 
 Disabling is **non-destructive**: the code stays on disk and autoloadable, ready to be re-enabled. Running the command again reports `Module [Billing] is already disabled.`; running it for a missing module fails with `Module [Billing] does not exist.`
 
-After the marker is created, a `LaravelModular\LaravelModular\Events\ModuleDisabled` event is dispatched carrying the module name.
+After the marker is created, a `Laltu\Modular\Events\ModuleDisabled` event is dispatched carrying the module name.
 
 ## Enabling a module
 
@@ -28,7 +28,7 @@ After the marker is created, a `LaravelModular\LaravelModular\Events\ModuleDisab
 php artisan module:enable Billing
 ```
 
-Removes the `.disabled` marker (reporting `Module [Billing] is already enabled.` when there is nothing to remove) and dispatches `LaravelModular\LaravelModular\Events\ModuleEnabled`.
+Removes the `.disabled` marker (reporting `Module [Billing] is already enabled.` when there is nothing to remove) and dispatches `Laltu\Modular\Events\ModuleEnabled`.
 
 Both commands flush the package's module cache, so they always reflect the on-disk state.
 

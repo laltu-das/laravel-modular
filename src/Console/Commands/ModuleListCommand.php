@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace LaravelModular\LaravelModular\Console\Commands;
+namespace Laltu\Modular\Console\Commands;
 
 use Illuminate\Console\Command;
-use LaravelModular\LaravelModular\Discovery\ModuleRepository;
-use LaravelModular\LaravelModular\Support\Module;
+use Laltu\Modular\Discovery\ModuleRepository;
+use Laltu\Modular\Support\Module;
 
 final class ModuleListCommand extends Command
 {

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace LaravelModular\LaravelModular\Tests\Concerns;
+namespace Laltu\Modular\Tests\Concerns;
 
 /**
  * Boots the package with parts of auto-discovery switched off.

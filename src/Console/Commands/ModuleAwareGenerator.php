@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace LaravelModular\LaravelModular\Console\Commands;
+namespace Laltu\Modular\Console\Commands;
 
 use Illuminate\Support\Str;
 use InvalidArgumentException;
-use LaravelModular\LaravelModular\Support\Config;
+use Laltu\Modular\Support\Config;
 use Symfony\Component\Console\Input\InputOption;
 
 trait ModuleAwareGenerator

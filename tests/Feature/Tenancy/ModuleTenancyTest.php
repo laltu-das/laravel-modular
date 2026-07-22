@@ -3,17 +3,17 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
-use LaravelModular\LaravelModular\LaravelModular;
-use LaravelModular\LaravelModular\Support\CurrentTenant;
+use Laltu\Modular\LaravelModular;
+use Laltu\Modular\Support\CurrentTenant;
 
 it('resolves the current tenant through the configured resolver', function () {
-    expect(app(LaravelModular::class)->tenant())->toBe(123)
+    expect(app(Laltu\Modular::class)->tenant())->toBe(123)
         ->and(app(CurrentTenant::class)->get())->toBe(123)
         ->and(app(CurrentTenant::class)->has())->toBeTrue();
 });
 
 it('only boots modules the tenant voter allows', function () {
-    $modular = app(LaravelModular::class);
+    $modular = app(Laltu\Modular::class);
 
     expect($modular->moduleNames())->toContain('Catalog')
         ->and($modular->moduleNames())->not->toContain('Billing')

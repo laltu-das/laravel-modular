@@ -3,14 +3,14 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\File;
-use LaravelModular\LaravelModular\LaravelModular;
+use Laltu\Modular\LaravelModular;
 
 it('resolves the singleton', function () {
-    expect(app(LaravelModular::class))->toBeInstanceOf(LaravelModular::class);
+    expect(app(Laltu\Modular::class))->toBeInstanceOf(Laltu\Modular::class);
 });
 
 it('returns the same instance from the container', function () {
-    expect(app(LaravelModular::class))->toBe(app(LaravelModular::class));
+    expect(app(Laltu\Modular::class))->toBe(app(Laltu\Modular::class));
 });
 
 it('merges the package config', function () {

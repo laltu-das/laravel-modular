@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace LaravelModular\LaravelModular;
+namespace Laltu\Modular;
 
 use Composer\Autoload\ClassLoader;
 use Illuminate\Console\Command;
@@ -13,49 +13,54 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
-use LaravelModular\LaravelModular\Boundaries\ModuleBoundaryInspector;
-use LaravelModular\LaravelModular\Console\Commands\CastMakeCommand;
-use LaravelModular\LaravelModular\Console\Commands\ChannelMakeCommand;
-use LaravelModular\LaravelModular\Console\Commands\ComponentMakeCommand;
-use LaravelModular\LaravelModular\Console\Commands\ConsoleMakeCommand;
-use LaravelModular\LaravelModular\Console\Commands\ControllerMakeCommand;
-use LaravelModular\LaravelModular\Console\Commands\EnumMakeCommand;
-use LaravelModular\LaravelModular\Console\Commands\EventMakeCommand;
-use LaravelModular\LaravelModular\Console\Commands\ExceptionMakeCommand;
-use LaravelModular\LaravelModular\Console\Commands\FactoryMakeCommand;
-use LaravelModular\LaravelModular\Console\Commands\InterfaceMakeCommand;
-use LaravelModular\LaravelModular\Console\Commands\JobMakeCommand;
-use LaravelModular\LaravelModular\Console\Commands\LaravelModularCommand;
-use LaravelModular\LaravelModular\Console\Commands\ListenerMakeCommand;
-use LaravelModular\LaravelModular\Console\Commands\MailMakeCommand;
-use LaravelModular\LaravelModular\Console\Commands\MakeModuleCommand;
-use LaravelModular\LaravelModular\Console\Commands\MiddlewareMakeCommand;
-use LaravelModular\LaravelModular\Console\Commands\ModelMakeCommand;
-use LaravelModular\LaravelModular\Console\Commands\ModuleBoundariesCommand;
-use LaravelModular\LaravelModular\Console\Commands\ModuleDisableCommand;
-use LaravelModular\LaravelModular\Console\Commands\ModuleEnableCommand;
-use LaravelModular\LaravelModular\Console\Commands\ModuleListCommand;
-use LaravelModular\LaravelModular\Console\Commands\NotificationMakeCommand;
-use LaravelModular\LaravelModular\Console\Commands\ObserverMakeCommand;
-use LaravelModular\LaravelModular\Console\Commands\PolicyMakeCommand;
-use LaravelModular\LaravelModular\Console\Commands\ProviderMakeCommand;
-use LaravelModular\LaravelModular\Console\Commands\RequestMakeCommand;
-use LaravelModular\LaravelModular\Console\Commands\ResourceMakeCommand;
-use LaravelModular\LaravelModular\Console\Commands\RuleMakeCommand;
-use LaravelModular\LaravelModular\Console\Commands\ScopeMakeCommand;
-use LaravelModular\LaravelModular\Console\Commands\SeederMakeCommand;
-use LaravelModular\LaravelModular\Console\Commands\TestMakeCommand;
-use LaravelModular\LaravelModular\Console\Commands\ViewMakeCommand;
-use LaravelModular\LaravelModular\Contracts\TenantModuleVoter;
-use LaravelModular\LaravelModular\Contracts\TenantResolver;
-use LaravelModular\LaravelModular\Discovery\ListenerDiscovery;
-use LaravelModular\LaravelModular\Discovery\ModuleClassDiscovery;
-use LaravelModular\LaravelModular\Discovery\ModuleRepository;
-use LaravelModular\LaravelModular\Events\ModuleBooted;
-use LaravelModular\LaravelModular\Events\ModuleBooting;
-use LaravelModular\LaravelModular\Support\Config;
-use LaravelModular\LaravelModular\Support\CurrentTenant;
-use LaravelModular\LaravelModular\Support\Module;
+use Laltu\Modular\Boundaries\ModuleBoundaryInspector;
+use Laltu\Modular\Console\Commands\CastMakeCommand;
+use Laltu\Modular\Console\Commands\ChannelMakeCommand;
+use Laltu\Modular\Console\Commands\ComponentMakeCommand;
+use Laltu\Modular\Console\Commands\ConsoleMakeCommand;
+use Laltu\Modular\Console\Commands\ControllerMakeCommand;
+use Laltu\Modular\Console\Commands\EnumMakeCommand;
+use Laltu\Modular\Console\Commands\EventMakeCommand;
+use Laltu\Modular\Console\Commands\ExceptionMakeCommand;
+use Laltu\Modular\Console\Commands\FactoryMakeCommand;
+use Laltu\Modular\Console\Commands\InterfaceMakeCommand;
+use Laltu\Modular\Console\Commands\JobMakeCommand;
+use Laltu\Modular\Console\Commands\LaravelModularCommand;
+use Laltu\Modular\Console\Commands\ListenerMakeCommand;
+use Laltu\Modular\Console\Commands\MailMakeCommand;
+use Laltu\Modular\Console\Commands\MakeModuleCommand;
+use Laltu\Modular\Console\Commands\MiddlewareMakeCommand;
+use Laltu\Modular\Console\Commands\ModelMakeCommand;
+use Laltu\Modular\Console\Commands\MessageConsumeCommand;
+use Laltu\Modular\Console\Commands\MessageMakeCommand;
+use Laltu\Modular\Console\Commands\MessageQueuesCommand;
+use Laltu\Modular\Console\Commands\ModuleApisCommand;
+use Laltu\Modular\Console\Commands\ModuleBoundariesCommand;
+use Laltu\Modular\Console\Commands\ModuleDisableCommand;
+use Laltu\Modular\Console\Commands\ModuleEnableCommand;
+use Laltu\Modular\Console\Commands\ModuleListCommand;
+use Laltu\Modular\Console\Commands\NotificationMakeCommand;
+use Laltu\Modular\Console\Commands\ObserverMakeCommand;
+use Laltu\Modular\Console\Commands\PolicyMakeCommand;
+use Laltu\Modular\Console\Commands\ProviderMakeCommand;
+use Laltu\Modular\Console\Commands\RequestMakeCommand;
+use Laltu\Modular\Console\Commands\ResourceMakeCommand;
+use Laltu\Modular\Console\Commands\RuleMakeCommand;
+use Laltu\Modular\Console\Commands\ScopeMakeCommand;
+use Laltu\Modular\Console\Commands\SeederMakeCommand;
+use Laltu\Modular\Console\Commands\TestMakeCommand;
+use Laltu\Modular\Console\Commands\ViewMakeCommand;
+use Laltu\Modular\Contracts\TenantModuleVoter;
+use Laltu\Modular\Contracts\TenantResolver;
+use Laltu\Modular\Communication\CommunicationServiceProvider;
+use Laltu\Modular\Discovery\ListenerDiscovery;
+use Laltu\Modular\Discovery\ModuleClassDiscovery;
+use Laltu\Modular\Discovery\ModuleRepository;
+use Laltu\Modular\Events\ModuleBooted;
+use Laltu\Modular\Events\ModuleBooting;
+use Laltu\Modular\Support\Config;
+use Laltu\Modular\Support\CurrentTenant;
+use Laltu\Modular\Support\Module;
 
 final class LaravelModularServiceProvider extends ServiceProvider
 {
@@ -101,14 +106,17 @@ final class LaravelModularServiceProvider extends ServiceProvider
             $app->make(Filesystem::class),
         ));
 
-        $this->app->singleton(LaravelModular::class, fn (Application $app): LaravelModular => new LaravelModular(
+        $this->app->singleton(Laltu\Modular::class, fn (Application $app): LaravelModular => new LaravelModular(
             $app->make(ModuleRepository::class),
             $app->make(CurrentTenant::class),
             $app->bound(TenantModuleVoter::class) ? $app->make(TenantModuleVoter::class) : null,
             $app->make(Dispatcher::class),
         ));
 
-        $this->registerModules($this->app->make(ModuleRepository::class), $this->app->make(LaravelModular::class));
+        // Register communication services (synchronous API + asynchronous messaging)
+        $this->app->register(CommunicationServiceProvider::class);
+
+        $this->registerModules($this->app->make(ModuleRepository::class), $this->app->make(Laltu\Modular::class));
     }
 
     public function boot(ModuleRepository $repository, LaravelModular $modular): void
@@ -142,6 +150,9 @@ final class LaravelModularServiceProvider extends ServiceProvider
         $this->commands([
             LaravelModularCommand::class,
             MakeModuleCommand::class,
+            ModuleApisCommand::class,
+            MessageQueuesCommand::class,
+            MessageConsumeCommand::class,
             ModuleBoundariesCommand::class,
             ModuleDisableCommand::class,
             ModuleEnableCommand::class,
@@ -163,6 +174,7 @@ final class LaravelModularServiceProvider extends ServiceProvider
             JobMakeCommand::class => 'Illuminate\\Foundation\\Console\\JobMakeCommand',
             ListenerMakeCommand::class => 'Illuminate\\Foundation\\Console\\ListenerMakeCommand',
             MailMakeCommand::class => 'Illuminate\\Foundation\\Console\\MailMakeCommand',
+            MessageMakeCommand::class => 'Illuminate\\Foundation\\Console\\EventMakeCommand',
             MiddlewareMakeCommand::class => 'Illuminate\\Routing\\Console\\MiddlewareMakeCommand',
             ModelMakeCommand::class => 'Illuminate\\Foundation\\Console\\ModelMakeCommand',
             NotificationMakeCommand::class => 'Illuminate\\Foundation\\Console\\NotificationMakeCommand',

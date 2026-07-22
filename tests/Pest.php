@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use LaravelModular\LaravelModular\Tests\Concerns\WithoutAutoDiscovery;
-use LaravelModular\LaravelModular\Tests\Concerns\WithTenancy;
-use LaravelModular\LaravelModular\Tests\TestCase;
+use Laltu\Modular\Tests\Concerns\WithoutAutoDiscovery;
+use Laltu\Modular\Tests\Concerns\WithTenancy;
+use Laltu\Modular\Tests\TestCase;
 
 uses(TestCase::class)->in(__DIR__);
 uses(WithTenancy::class)->in('Feature/Tenancy');

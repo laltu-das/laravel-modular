@@ -22,6 +22,8 @@ This README covers the essentials. Detailed guides live in the [docs](docs) dire
 - [Auto-discovery](docs/auto-discovery.md)
 - [Generating resources in a module](docs/generating-resources.md)
 - [Event-driven communication](docs/event-driven-communication.md)
+- [Synchronous communication (method calls)](docs/synchronous-communication.md)
+- [Asynchronous communication (messaging)](docs/asynchronous-communication.md)
 - [Module administration](docs/module-administration.md)
 - [Multi-tenancy](docs/multi-tenancy.md)
 - [Module boundaries](docs/module-boundaries.md)
@@ -66,6 +68,7 @@ Modules/Product/
 ├── Jobs/
 ├── Listeners/                 auto-wired from the handle() type-hint
 ├── Mail/
+├── Messages/                  async messages (internal)
 ├── Models/Scopes/
 ├── Notifications/
 ├── Observers/                 {Model}Observer => Models/{Model} (auto)
@@ -150,6 +153,7 @@ All supported Laravel generators gain a `--module` option. Without `--module`, L
 | `make:job` | `Jobs` |
 | `make:listener` | `Listeners` |
 | `make:mail` | `Mail` |
+| `make:message` | `Messages` / `Contracts` |
 | `make:middleware` | `Http/Middleware` |
 | `make:model` | `Models` |
 | `make:notification` | `Notifications` |
@@ -178,6 +182,8 @@ php artisan make:resource CategoryResource --module=Category
 php artisan make:middleware EnsureCategoryActive --module=Category
 php artisan make:observer CategoryObserver --module=Category
 php artisan make:mail CategorySummaryMail --module=Category
+php artisan make:message OrderPlaced --module=Orders --channel=orders
+php artisan make:message OrderPlaced --module=Orders --channel=orders --contract
 ```
 
 For a module model, `-m`, `-f`, and `-s` place the migration, factory, and seeder in that module's `database/` directories instead of the application's global database directories.
@@ -191,7 +197,7 @@ Modules stay decoupled by talking through events — never through each other's 
 - Publish with the `LaravelModular` facade (or plain `event()`):
 
 ```php
-use LaravelModular\LaravelModular\Facades\LaravelModular;
+use Laltu\Modular\Facades\LaravelModular;
 use Modules\Billing\Events\InvoicePaid;
 
 LaravelModular::publish(new InvoicePaid(amount: 2500));
@@ -210,6 +216,64 @@ final class ReleaseInventory
     }
 }
 ```
+
+## Synchronous communication (method calls)
+
+Modules can call methods directly on each other's **public APIs** — interfaces in `Contracts/` — for fast, in-memory communication:
+
+```php
+// Module B defines its public API
+// Modules/Billing/Contracts/InvoiceGateway.php
+interface InvoiceGateway
+{
+    public function charge(int $amount): bool;
+}
+
+// Module B binds implementation in its service provider
+$this->app->bind(InvoiceGateway::class, StripeGateway::class);
+
+// Module A calls the API directly
+use Laltu\Modular\Facades\LaravelModular;
+use Modules\Billing\Contracts\InvoiceGateway;
+
+$gateway = LaravelModular::api(InvoiceGateway::class);
+$gateway->charge(2500);
+```
+
+[Read more →](docs/synchronous-communication.md)
+
+## Asynchronous communication (messaging)
+
+Modules communicate via messages on a queue (fire-and-forget) for loose coupling and resilience:
+
+```php
+// Define a message (in Contracts/ for public API)
+// Modules/Orders/Contracts/OrderPlaced.php
+final readonly class OrderPlaced extends BaseMessage
+{
+    public function __construct(
+        public string $orderId,
+        public float $total,
+    ) {}
+
+    public function channel(): string { return 'orders'; }
+}
+
+// Module A publishes (fire-and-forget)
+LaravelModular::publishMessage(new OrderPlaced('ORD-123', 99.99));
+
+// Module B consumes via a queue job
+final class ProcessOrderPlaced implements ShouldQueue
+{
+    public function __construct(public readonly OrderPlaced $message) {}
+    public function handle(): void { /* reserve inventory */ }
+}
+
+// Register consumer in Module B's service provider
+$messageBus->subscribe(OrderPlaced::class, ProcessOrderPlaced::class);
+```
+
+[Read more →](docs/asynchronous-communication.md)
 
 ## Module lifecycle administration
 
@@ -235,9 +299,9 @@ Two hooks integrate the package with your existing `TenantContext` patterns:
 ```
 
 ```php
-use LaravelModular\LaravelModular\Contracts\TenantResolver;
-use LaravelModular\LaravelModular\Contracts\TenantModuleVoter;
-use LaravelModular\LaravelModular\Support\Module;
+use Laltu\Modular\Contracts\TenantResolver;
+use Laltu\Modular\Contracts\TenantModuleVoter;
+use Laltu\Modular\Support\Module;
 
 final class CurrentTenantResolver implements TenantResolver
 {

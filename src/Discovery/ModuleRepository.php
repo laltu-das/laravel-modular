@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace LaravelModular\LaravelModular\Discovery;
+namespace Laltu\Modular\Discovery;
 
 use Illuminate\Filesystem\Filesystem;
-use LaravelModular\LaravelModular\Support\Module;
+use Laltu\Modular\Support\Module;
 
 final class ModuleRepository
 {

@@ -1,0 +1,31 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{namespace}};
+
+use Laltu\Modular\Communication\Asynchronous\Message;
+use JsonSerializable;
+
+/**
+ * Message contract for asynchronous communication (public API).
+ */
+final readonly class {{class}} implements Message, JsonSerializable
+{
+    public function __construct(
+        // Add your message properties here
+        public string $exampleProperty,
+    ) {}
+
+    public function channel(): string
+    {
+        return '{{channel}}';
+    }
+
+    public function jsonSerialize(): array
+    {
+        return [
+            'example_property' => $this->exampleProperty,
+        ];
+    }
+}

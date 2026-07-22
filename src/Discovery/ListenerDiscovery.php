@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace LaravelModular\LaravelModular\Discovery;
+namespace Laltu\Modular\Discovery;
 
-use LaravelModular\LaravelModular\Support\Module;
+use Laltu\Modular\Support\Module;
 use ReflectionClass;
 use ReflectionNamedType;
 

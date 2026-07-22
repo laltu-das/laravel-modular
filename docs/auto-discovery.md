@@ -58,4 +58,4 @@ A module containing a `.disabled` marker file is never discovered (see [module a
 
 ## Lifecycle events
 
-When the application boots, `LaravelModular\LaravelModular\Events\ModuleBooting` fires before each enabled module boots and `ModuleBooted` fires after. Both carry the module and the current tenant resolved by the configured [tenant resolver](multi-tenancy.md).
+When the application boots, `Laltu\Modular\Events\ModuleBooting` fires before each enabled module boots and `ModuleBooted` fires after. Both carry the module and the current tenant resolved by the configured [tenant resolver](multi-tenancy.md).

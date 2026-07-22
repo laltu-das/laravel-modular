@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace LaravelModular\LaravelModular\Console\Commands;
+namespace Laltu\Modular\Console\Commands;
 
 use Illuminate\Foundation\Console\TestMakeCommand as BaseTestMakeCommand;
 

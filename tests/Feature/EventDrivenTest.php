@@ -2,25 +2,25 @@
 
 declare(strict_types=1);
 
-use LaravelModular\LaravelModular\LaravelModular;
+use Laltu\Modular\LaravelModular;
 use Modules\Billing\Events\InvoicePaid;
 use Modules\Catalog\Events\OrderShipped;
 
 it('wires module listeners automatically from their handle type-hint', function () {
-    app(LaravelModular::class)->publish(new OrderShipped('TRK-42'));
+    app(Laltu\Modular::class)->publish(new OrderShipped('TRK-42'));
 
     expect(app('catalog.shipment_email'))->toBe('TRK-42');
 });
 
 it('lets modules communicate through events without referencing each other', function () {
-    $responses = app(LaravelModular::class)->publish(new InvoicePaid(250));
+    $responses = app(Laltu\Modular::class)->publish(new InvoicePaid(250));
 
     expect($responses)->toBeArray()
         ->and(app('catalog.released_invoice_amount'))->toBe(250);
 });
 
 it('subscribes runtime listeners, including wildcards', function () {
-    $modular = app(LaravelModular::class);
+    $modular = app(Laltu\Modular::class);
 
     $modular->listen(OrderShipped::class, function (OrderShipped $event): void {
         app()->instance('catalog.runtime_listener', $event->trackingNumber);

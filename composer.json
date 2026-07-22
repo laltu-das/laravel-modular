@@ -1,11 +1,11 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laltu/laravel-modular",
+    "name": "laltu/modular",
     "description": "A Laravel-style modular package for organizing application code by feature",
     "keywords": [
         "laravel",
         "laltu",
-        "laravel-modular"
+        "modular"
     ],
     "homepage": "https://github.com/laltu/laravel-modular",
     "license": "MIT",
@@ -35,12 +35,12 @@
     },
     "autoload": {
         "psr-4": {
-            "LaravelModular\\LaravelModular\\": "src/"
+            "Laltu\\Modular\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "LaravelModular\\LaravelModular\\Tests\\": "tests/",
+            "Laltu\\Modular\\Tests\\": "tests/",
             "Workbench\\App\\": "workbench/app/",
             "Workbench\\Database\\Factories\\": "workbench/database/factories/",
             "Workbench\\Database\\Seeders\\": "workbench/database/seeders/"
@@ -90,10 +90,10 @@
     "extra": {
         "laravel": {
             "providers": [
-                "LaravelModular\\LaravelModular\\LaravelModularServiceProvider"
+                "Laltu\\Modular\\LaravelModularServiceProvider"
             ],
             "aliases": {
-                "LaravelModular": "LaravelModular\\LaravelModular\\Facades\\LaravelModular"
+                "LaravelModular": "Laltu\\Modular\\Facades\\LaravelModular"
             }
         }
     },

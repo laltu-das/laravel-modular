@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace LaravelModular\LaravelModular\Console\Commands;
+namespace Laltu\Modular\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
-use LaravelModular\LaravelModular\Boundaries\ModuleBoundaryInspector;
-use LaravelModular\LaravelModular\Discovery\ModuleRepository;
-use LaravelModular\LaravelModular\Support\Config;
-use LaravelModular\LaravelModular\Support\Module;
+use Laltu\Modular\Boundaries\ModuleBoundaryInspector;
+use Laltu\Modular\Discovery\ModuleRepository;
+use Laltu\Modular\Support\Config;
+use Laltu\Modular\Support\Module;
 
 final class ModuleBoundariesCommand extends Command
 {

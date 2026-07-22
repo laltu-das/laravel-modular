@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace LaravelModular\LaravelModular\Tests\Concerns;
+namespace Laltu\Modular\Tests\Concerns;
 
-use LaravelModular\LaravelModular\Tests\Fixtures\Tenancy\FakeTenantResolver;
-use LaravelModular\LaravelModular\Tests\Fixtures\Tenancy\NoBillingTenantVoter;
+use Laltu\Modular\Tests\Fixtures\Tenancy\FakeTenantResolver;
+use Laltu\Modular\Tests\Fixtures\Tenancy\NoBillingTenantVoter;
 
 /**
  * Boots the package with a tenant resolver and a voter that rejects Billing,

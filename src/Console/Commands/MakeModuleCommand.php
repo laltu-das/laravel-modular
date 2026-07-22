@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace LaravelModular\LaravelModular\Console\Commands;
+namespace Laltu\Modular\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
-use LaravelModular\LaravelModular\Support\Config;
+use Laltu\Modular\Support\Config;
 
 final class MakeModuleCommand extends Command
 {
@@ -157,6 +157,7 @@ PHP.PHP_EOL;
             'Jobs',
             'Listeners',
             'Mail',
+            'Messages',
             'Models',
             'Models/Scopes',
             'Notifications',

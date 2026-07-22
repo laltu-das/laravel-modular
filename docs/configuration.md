@@ -30,13 +30,13 @@ The PSR-4 namespace prefix for modules. A module `Product` gets the namespace `M
 
 **Default:** `null`
 
-Optional class name implementing `LaravelModular\LaravelModular\Contracts\TenantResolver`. Feeds `LaravelModular::tenant()` and the tenant payload of the `ModuleBooting` / `ModuleBooted` events. See [multi-tenancy](multi-tenancy.md).
+Optional class name implementing `Laltu\Modular\Contracts\TenantResolver`. Feeds `LaravelModular::tenant()` and the tenant payload of the `ModuleBooting` / `ModuleBooted` events. See [multi-tenancy](multi-tenancy.md).
 
 ## `tenant_voter`
 
 **Default:** `null`
 
-Optional class name implementing `LaravelModular\LaravelModular\Contracts\TenantModuleVoter`. Decides per tenant whether a module boots; rejected modules are not registered at all. See [multi-tenancy](multi-tenancy.md).
+Optional class name implementing `Laltu\Modular\Contracts\TenantModuleVoter`. Decides per tenant whether a module boots; rejected modules are not registered at all. See [multi-tenancy](multi-tenancy.md).
 
 ## `public_directories`
 

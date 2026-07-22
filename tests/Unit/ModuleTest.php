@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Filesystem\Filesystem;
-use LaravelModular\LaravelModular\Discovery\ModuleRepository;
-use LaravelModular\LaravelModular\Support\Module;
+use Laltu\Modular\Discovery\ModuleRepository;
+use Laltu\Modular\Support\Module;
 
 it('resolves module-relative paths and classes', function () {
     $module = new Module('Shop', base_path('Modules/Shop'), 'Modules\\Shop');
