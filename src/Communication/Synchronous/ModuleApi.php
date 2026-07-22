@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace Laltu\Modular\Communication\Synchronous;
 
-use BackedEnum;
+use Illuminate\Container\Container as IlluminateContainer;
 use Illuminate\Contracts\Container\Container;
-use Illuminate\Support\Collection;
-use Laltu\Modular\Discovery\ModuleRepository;
+use Illuminate\Filesystem\Filesystem;
 use Laltu\Modular\LaravelModular;
 use Laltu\Modular\Support\Module;
 
@@ -27,14 +26,13 @@ use Laltu\Modular\Support\Module;
  * $gateway->charge(100);
  *
  * // Or with the LaravelModular facade
- * $gateway = Laltu\Modular::api(InvoiceGateway::class);
+ * $gateway = LaravelModular::api(InvoiceGateway::class);
  * ```
  */
 final readonly class ModuleApi
 {
     public function __construct(
         private Container $container,
-        private ModuleRepository $modules,
         private LaravelModular $modular,
     ) {}
 
@@ -42,20 +40,25 @@ final readonly class ModuleApi
      * Resolve a public API interface from any enabled module.
      *
      * @template T of object
-     * @param class-string<T> $interface
+     * @param  class-string<T>  $interface
      * @return T
      */
     public function resolve(string $interface): object
     {
-        return $this->container->make($interface);
+        $resolved = $this->container->make($interface);
+
+        if (! is_object($resolved)) {
+            throw new \LogicException("Public API [{$interface}] did not resolve to an object.");
+        }
+
+        return $resolved;
     }
 
     /**
      * Resolve a public API interface from a specific module.
      *
      * @template T of object
-     * @param class-string<T> $interface
-     * @param string $moduleName
+     * @param  class-string<T>  $interface
      * @return T
      */
     public function resolveFromModule(string $interface, string $moduleName): object
@@ -65,7 +68,7 @@ final readonly class ModuleApi
         // Verify the interface belongs to the module's public API
         $this->assertPublicApi($module, $interface);
 
-        return $this->container->make($interface);
+        return $this->resolve($interface);
     }
 
     /**
@@ -79,7 +82,7 @@ final readonly class ModuleApi
     /**
      * Get all public API interfaces provided by a module.
      *
-     * @return array<class-string, class-string> Map of interface => implementation
+     * @return array<string, string> Map of interface => implementation
      */
     public function getModuleApis(string $moduleName): array
     {
@@ -87,9 +90,11 @@ final readonly class ModuleApi
         $apis = [];
 
         foreach ($this->discoverModuleContracts($module) as $interface) {
-            if ($this->container->bound($interface)) {
-                $apis[$interface] = $this->container->getBindings()[$interface]['concrete'] ?? $interface;
+            if (! $this->container->bound($interface)) {
+                continue;
             }
+
+            $apis[$interface] = $this->implementationFor($interface);
         }
 
         return $apis;
@@ -98,7 +103,7 @@ final readonly class ModuleApi
     /**
      * Get all public APIs across all enabled modules.
      *
-     * @return array<string, array<class-string, class-string>> Map of moduleName => [interface => implementation]
+     * @return array<string, array<string, string>> Map of moduleName => [interface => implementation]
      */
     public function getAllApis(): array
     {
@@ -130,6 +135,18 @@ final readonly class ModuleApi
         return null;
     }
 
+    private function implementationFor(string $interface): string
+    {
+        if (! $this->container instanceof IlluminateContainer) {
+            return $interface;
+        }
+
+        $binding = $this->container->getBindings()[$interface] ?? null;
+        $implementation = is_array($binding) ? ($binding['concrete'] ?? $interface) : $interface;
+
+        return is_string($implementation) ? $implementation : get_debug_type($implementation);
+    }
+
     /**
      * Discover all contract interfaces in a module's Contracts/ directory.
      *
@@ -138,15 +155,15 @@ final readonly class ModuleApi
     private function discoverModuleContracts(Module $module): array
     {
         $contractsPath = $module->path('Contracts');
+        $files = $this->container->make(Filesystem::class);
 
-        if (! $this->container->make(\Illuminate\Filesystem\Filesystem::class)->isDirectory($contractsPath)) {
+        if (! $files instanceof Filesystem || ! $files->isDirectory($contractsPath)) {
             return [];
         }
 
-        $files = $this->container->make(\Illuminate\Filesystem\Filesystem::class)->files($contractsPath);
         $contracts = [];
 
-        foreach ($files as $file) {
+        foreach ($files->files($contractsPath) as $file) {
             if ($file->getExtension() !== 'php') {
                 continue;
             }
@@ -154,6 +171,7 @@ final readonly class ModuleApi
             $className = $module->namespace.'\\Contracts\\'.$file->getFilenameWithoutExtension();
 
             if (interface_exists($className)) {
+                /** @var class-string $className */
                 $contracts[] = $className;
             }
         }

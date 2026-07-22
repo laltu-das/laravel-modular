@@ -19,8 +19,8 @@ it('resolves module-relative paths and classes', function () {
 it('discovers modules and their disabled state', function () {
     $repository = new ModuleRepository(new Filesystem, __DIR__.'/../Fixtures/Modules', 'Modules');
 
-    expect(array_keys($repository->all()))->toBe(['Billing', 'Catalog'])
-        ->and(array_keys($repository->all(true)))->toBe(['Billing', 'Catalog', 'Legacy'])
+    expect(array_keys($repository->all()))->toBe(['Billing', 'Catalog', 'Inventory', 'Notifications', 'Orders'])
+        ->and(array_keys($repository->all(true)))->toBe(['Billing', 'Catalog', 'Inventory', 'Legacy', 'Notifications', 'Orders'])
         ->and($repository->all(true)['Legacy']->disabled)->toBeTrue()
         ->and($repository->find('catalog'))->toBeInstanceOf(Module::class)
         ->and($repository->find('legacy'))->toBeNull();

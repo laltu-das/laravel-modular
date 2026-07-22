@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Laltu\Modular\Communication\Asynchronous;
 
-use BackedEnum;
 use JsonSerializable;
 
 /**
@@ -18,7 +17,7 @@ use JsonSerializable;
  *
  * Usage:
  * ```php
- * final readonly class OrderPlaced implements Message
+ * final readonly class OrderPlaced extends BaseMessage
  * {
  *     public function __construct(
  *         public string $orderId,
@@ -42,34 +41,21 @@ interface Message extends JsonSerializable
 
     /**
      * Get the message priority (higher = more urgent).
-     * Defaults to normal priority.
      */
-    public function priority(): int
-    {
-        return 0;
-    }
+    public function priority(): int;
 
     /**
      * Get the delay in seconds before the message should be processed.
      */
-    public function delay(): int
-    {
-        return 0;
-    }
+    public function delay(): int;
 
     /**
      * Get the connection name for the queue.
      */
-    public function connection(): ?string
-    {
-        return null;
-    }
+    public function connection(): ?string;
 
     /**
      * Get the queue name (alias for channel for Laravel Queue compatibility).
      */
-    public function queue(): string
-    {
-        return $this->channel();
-    }
+    public function queue(): string;
 }

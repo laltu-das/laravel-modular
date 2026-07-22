@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Laltu\Modular\Communication\Asynchronous;
 
 use Closure;
+use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Queue\Factory as QueueFactory;
-use Illuminate\Contracts\Queue\Monitor;
-use Illuminate\Support\Facades\Queue;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Support\Str;
 
 /**
  * Message bus for asynchronous communication between modules.
@@ -41,48 +42,53 @@ use Illuminate\Support\Facades\Queue;
 final class MessageBus
 {
     /**
-     * @var array<class-string<Message>, array<class-string<\Illuminate\Contracts\Queue\ShouldQueue>>>
+     * @var array<class-string<Message>, list<class-string<ShouldQueue>|Closure>>
      */
     private array $subscriptions = [];
 
     public function __construct(
-        private QueueFactory $queue,
-        private ?Monitor $monitor = null,
+        private QueueFactory|Container $queue,
+        private ?object $monitor = null,
     ) {}
 
     /**
      * Publish a message to the message broker (fire-and-forget).
      *
-     * @param Message $message The message to publish
-     * @return string The job ID
+     * @return string The job ID, or a generated local ID when the queue driver does not return one.
      */
     public function publish(Message $message): string
     {
         $job = new MessageJob($message);
 
-        return $this->queue->connection($message->connection())
-            ->pushOn($message->channel(), $job, $message->priority());
+        if ($message->delay() > 0) {
+            return $this->publishLater($message, $message->delay());
+        }
+
+        $id = $this->queue()->connection($message->connection())
+            ->pushOn($message->channel(), $job);
+
+        return $this->normalizeJobId($id);
     }
 
     /**
      * Publish a message with a delay.
      *
-     * @param Message $message The message to publish
-     * @param int $delay Delay in seconds
-     * @return string The job ID
+     * @return string The job ID, or a generated local ID when the queue driver does not return one.
      */
     public function publishLater(Message $message, int $delay): string
     {
         $job = new MessageJob($message);
 
-        return $this->queue->connection($message->connection())
-            ->laterOn($message->channel(), $delay, $job, $message->priority());
+        $id = $this->queue()->connection($message->connection())
+            ->laterOn($message->channel(), $delay, $job);
+
+        return $this->normalizeJobId($id);
     }
 
     /**
      * Publish multiple messages in a batch.
      *
-     * @param iterable<Message> $messages
+     * @param  iterable<Message>  $messages
      * @return list<string> Job IDs
      */
     public function publishBatch(iterable $messages): array
@@ -97,36 +103,34 @@ final class MessageBus
     }
 
     /**
-     * Subscribe a job class to handle a specific message type.
+     * Subscribe a job class or closure to handle a specific message type.
      *
-     * The job class must accept the message in its constructor.
-     * This registers the subscription for the message consumer command.
+     * Job classes must accept the message in their constructor. Closure
+     * subscriptions are executed directly by the message:consume command.
      *
-     * @param class-string<Message> $messageClass
-     * @param class-string<\Illuminate\Contracts\Queue\ShouldQueue> $jobClass
+     * @param  class-string<Message>  $messageClass
+     * @param  class-string<ShouldQueue>|Closure  $handler
      */
-    public function subscribe(string $messageClass, string $jobClass): void
-    {
-        $this->subscriptions[$messageClass][] = $jobClass;
-    }
-
-    /**
-     * Subscribe a closure to handle a specific message type.
-     *
-     * Note: Closure subscriptions only work with the message:consume command.
-     *
-     * @param class-string<Message> $messageClass
-     * @param Closure(Message): void $handler
-     */
-    public function subscribeClosure(string $messageClass, Closure $handler): void
+    public function subscribe(string $messageClass, string|Closure $handler): void
     {
         $this->subscriptions[$messageClass][] = $handler;
     }
 
     /**
+     * Subscribe a closure to handle a specific message type.
+     *
+     * @param  class-string<Message>  $messageClass
+     * @param  Closure  $handler
+     */
+    public function subscribeClosure(string $messageClass, Closure $handler): void
+    {
+        $this->subscribe($messageClass, $handler);
+    }
+
+    /**
      * Get all registered subscriptions.
      *
-     * @return array<class-string<Message>, array<class-string<\Illuminate\Contracts\Queue\ShouldQueue>|Closure>>
+     * @return array<class-string<Message>, list<class-string<ShouldQueue>|Closure>>
      */
     public function getSubscriptions(): array
     {
@@ -138,11 +142,11 @@ final class MessageBus
      */
     public function getQueueSize(string $channel, ?string $connection = null): int
     {
-        if ($this->monitor === null) {
+        if ($this->monitor === null || ! method_exists($this->monitor, 'getQueueSize')) {
             return 0;
         }
 
-        return $this->monitor->getQueueSize($channel, $connection);
+        return (int) $this->monitor->getQueueSize($channel, $connection);
     }
 
     /**
@@ -152,29 +156,48 @@ final class MessageBus
      */
     public function getAllQueueSizes(?string $connection = null): array
     {
-        if ($this->monitor === null) {
+        if ($this->monitor === null || ! method_exists($this->monitor, 'getQueueSizes')) {
             return [];
         }
 
-        return $this->monitor->getQueueSizes($connection);
+        $sizes = $this->monitor->getQueueSizes($connection);
+
+        if (! is_array($sizes)) {
+            return [];
+        }
+
+        $normalized = [];
+
+        foreach ($sizes as $queue => $size) {
+            if (is_string($queue) && is_numeric($size)) {
+                $normalized[$queue] = (int) $size;
+            }
+        }
+
+        return $normalized;
     }
-}
 
-/**
- * Internal job that wraps a Message for queue processing.
- * The message consumer command will extract the message and dispatch the appropriate handler jobs.
- */
-final class MessageJob implements \Illuminate\Contracts\Queue\ShouldQueue
-{
-    use \Illuminate\Queue\SerializesModels;
-
-    public function __construct(
-        public readonly Message $message,
-    ) {}
-
-    public function handle(): void
+    private function queue(): QueueFactory
     {
-        // This job is a marker - the actual handling is done by the message consumer
-        // which reads this job from the queue and dispatches the appropriate handlers
+        if ($this->queue instanceof QueueFactory) {
+            return $this->queue;
+        }
+
+        $queue = $this->queue->make(QueueFactory::class);
+
+        if (! $queue instanceof QueueFactory) {
+            throw new \LogicException('The queue factory service is not registered correctly.');
+        }
+
+        return $queue;
+    }
+
+    private function normalizeJobId(mixed $id): string
+    {
+        if (is_scalar($id) && (string) $id !== '') {
+            return (string) $id;
+        }
+
+        return (string) Str::uuid();
     }
 }
