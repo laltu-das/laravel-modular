@@ -1,0 +1,23 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{namespace}};
+
+use Laltu\Modular\Communication\Asynchronous\BaseMessage;
+
+/**
+ * Message for asynchronous communication.
+ */
+final readonly class {{class}} extends BaseMessage
+{
+    public function __construct(
+        // Add your message properties here
+        public string $exampleProperty,
+    ) {}
+
+    public function channel(): string
+    {
+        return '{{channel}}';
+    }
+}

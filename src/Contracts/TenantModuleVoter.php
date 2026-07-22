@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace LaravelModular\LaravelModular\Contracts;
+namespace Laltu\Modular\Contracts;
 
-use LaravelModular\LaravelModular\Support\Module;
+use Laltu\Modular\Support\Module;
 
 /**
  * Decides whether a module is active for the current tenant.

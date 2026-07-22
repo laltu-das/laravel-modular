@@ -13,7 +13,7 @@ Modules stay decoupled by talking through events — never through each other's 
 Use the `LaravelModular` facade (or plain `event()` — same dispatcher):
 
 ```php
-use LaravelModular\LaravelModular\Facades\LaravelModular;
+use Laltu\Modular\Facades\LaravelModular;
 use Modules\Billing\Events\InvoicePaid;
 
 LaravelModular::publish(new InvoicePaid(amount: 2500));

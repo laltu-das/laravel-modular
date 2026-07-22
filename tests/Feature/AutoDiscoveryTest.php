@@ -5,8 +5,8 @@ declare(strict_types=1);
 use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
-use LaravelModular\LaravelModular\Exceptions\ModuleNotFound;
-use LaravelModular\LaravelModular\LaravelModular;
+use Laltu\Modular\Exceptions\ModuleNotFound;
+use Laltu\Modular\LaravelModular;
 use Modules\Billing\Events\InvoicePaid;
 use Modules\Billing\Providers\BillingServiceProvider;
 use Modules\Catalog\Events\OrderShipped;
@@ -57,7 +57,7 @@ it('registers module migrations with the migrator', function () {
 });
 
 it('skips modules marked as disabled', function () {
-    $modular = app(LaravelModular::class);
+    $modular = app(Laltu\Modular::class);
 
     expect($modular->has('Legacy'))->toBeFalse()
         ->and($modular->has('Catalog'))->toBeTrue()
@@ -66,9 +66,9 @@ it('skips modules marked as disabled', function () {
 });
 
 it('resolves modules by name regardless of case', function () {
-    expect(app(LaravelModular::class)->module('catalog')->name)->toBe('Catalog');
+    expect(app(Laltu\Modular::class)->module('catalog')->name)->toBe('Catalog');
 });
 
 it('throws for unknown modules', function () {
-    app(LaravelModular::class)->module('UnknownModule');
+    app(Laltu\Modular::class)->module('UnknownModule');
 })->throws(ModuleNotFound::class);

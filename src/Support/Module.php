@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace LaravelModular\LaravelModular\Support;
+namespace Laltu\Modular\Support;
 
 final readonly class Module
 {

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace LaravelModular\LaravelModular\Events;
+namespace Laltu\Modular\Events;
 
-use LaravelModular\LaravelModular\Support\Module;
+use Laltu\Modular\Support\Module;
 
 final readonly class ModuleBooted
 {

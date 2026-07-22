@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace LaravelModular\LaravelModular\Events;
+namespace Laltu\Modular\Events;
 
 /**
  * Dispatched by `module:enable` after a module's `.disabled` marker is removed.

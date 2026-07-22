@@ -4,8 +4,10 @@
 
 ### Added
 
-- Documentation guides under `docs/` covering installation, creating modules, auto-discovery, module-aware generators, event-driven communication, module administration, multi-tenancy, module boundaries, and the configuration reference.
-- README sections for requirements, documentation links, testing commands, changelog, contributing, security, and credits.
+- **Synchronous Communication (Method Calls)**: Modules can now communicate via direct method calls on public APIs (interfaces in `Contracts/`). New `ModuleApi` class with `LaravelModular::api()`, `apiFrom()`, `hasApi()`, `allApis()`, and `getProviderModule()` methods. New `module:apis` command to list public APIs.
+- **Asynchronous Communication (Messaging)**: Message-based communication using Laravel's queue system as a message broker. New `Message` contract, `BaseMessage` base class, `MessageBus` for publishing/consuming, `MessageJob` for queue processing, and `message:consume` command for running consumers. New `make:message` generator command.
+- Documentation guides for synchronous and asynchronous communication patterns.
+- `Messages/` directory created by default in new modules.
 
 ### Fixed
 

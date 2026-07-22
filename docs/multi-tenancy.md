@@ -4,8 +4,8 @@ Two hooks integrate the package with your existing `TenantContext` patterns with
 
 ## The two contracts
 
-1. **`tenant_resolver`** — a class implementing `LaravelModular\LaravelModular\Contracts\TenantResolver`. It feeds `LaravelModular::tenant()` and the tenant payload of the `ModuleBooting` / `ModuleBooted` lifecycle events.
-2. **`tenant_voter`** — a class implementing `LaravelModular\LaravelModular\Contracts\TenantModuleVoter`. It decides per tenant whether a module is active.
+1. **`tenant_resolver`** — a class implementing `Laltu\Modular\Contracts\TenantResolver`. It feeds `LaravelModular::tenant()` and the tenant payload of the `ModuleBooting` / `ModuleBooted` lifecycle events.
+2. **`tenant_voter`** — a class implementing `Laltu\Modular\Contracts\TenantModuleVoter`. It decides per tenant whether a module is active.
 
 ```php
 // config/laravel-modular.php
@@ -14,9 +14,9 @@ Two hooks integrate the package with your existing `TenantContext` patterns with
 ```
 
 ```php
-use LaravelModular\LaravelModular\Contracts\TenantResolver;
-use LaravelModular\LaravelModular\Contracts\TenantModuleVoter;
-use LaravelModular\LaravelModular\Support\Module;
+use Laltu\Modular\Contracts\TenantResolver;
+use Laltu\Modular\Contracts\TenantModuleVoter;
+use Laltu\Modular\Support\Module;
 
 final class CurrentTenantResolver implements TenantResolver
 {
@@ -50,7 +50,7 @@ Combined with the `.disabled` marker, a module is fully active only when **both*
 ## Reading state at runtime
 
 ```php
-use LaravelModular\LaravelModular\Facades\LaravelModular;
+use Laltu\Modular\Facades\LaravelModular;
 
 LaravelModular::modules();      // modules enabled for the current tenant
 LaravelModular::moduleNames();  // ['Catalog', 'Billing', ...]
@@ -67,7 +67,7 @@ All of these only expose modules enabled for the **current** tenant, so per-requ
 `ModuleBooting` / `ModuleBooted` are dispatched per enabled module during boot and carry the resolved tenant, letting your listeners do tenant-aware module initialization:
 
 ```php
-use LaravelModular\LaravelModular\Events\ModuleBooted;
+use Laltu\Modular\Events\ModuleBooted;
 
 Event::listen(function (ModuleBooted $event): void {
     // $event->module and $event->tenant
@@ -76,4 +76,4 @@ Event::listen(function (ModuleBooted $event): void {
 
 ## Support classes
 
-`LaravelModular\LaravelModular\Support\CurrentTenant` is available from the container anywhere you cannot use the facade: `get()` returns the tenant (or `null`), `has()` reports whether a resolver is configured **and** returned a non-null tenant.
+`Laltu\Modular\Support\CurrentTenant` is available from the container anywhere you cannot use the facade: `get()` returns the tenant (or `null`), `has()` reports whether a resolver is configured **and** returned a non-null tenant.
