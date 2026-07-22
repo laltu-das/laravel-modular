@@ -58,6 +58,6 @@ it('finds which module provides an interface', function () {
 });
 
 it('throws when resolving from wrong module', function () {
-    LaravelModular::apiFrom(OrderGateway::class, 'Inventory')
+    expect(fn () => LaravelModular::apiFrom(OrderGateway::class, 'Inventory'))
         ->toThrow(\InvalidArgumentException::class);
 });
