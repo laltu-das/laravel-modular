@@ -1,0 +1,18 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{namespace}}\Notifications;
+
+use Laltu\Modular\Notifications\ModuleNotification;
+
+final class {{class}} extends ModuleNotification
+{
+    public function toArray($notifiable): array
+    {
+        return [
+            'message' => 'Module notification from {{module}}',
+            'module' => $this->moduleName ?? '{{module}}',
+        ];
+    }
+}

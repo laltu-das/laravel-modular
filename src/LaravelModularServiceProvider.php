@@ -37,6 +37,13 @@ use Laltu\Modular\Console\Commands\MessageMakeCommand;
 use Laltu\Modular\Console\Commands\MessageQueuesCommand;
 use Laltu\Modular\Console\Commands\ModuleApisCommand;
 use Laltu\Modular\Console\Commands\ModuleBoundariesCommand;
+use Laltu\Modular\Broadcasting\ModuleBroadcast;
+use Laltu\Modular\Console\Commands\InertiaModuleCommand;
+use Laltu\Modular\Console\Commands\ModuleBroadcastEvent;
+use Laltu\Modular\Console\Commands\ModuleHealthCheck;
+use Laltu\Modular\Console\Commands\ModuleDependencyGraph;
+use Laltu\Modular\Console\Commands\ModuleCacheFlushCommand;
+use Laltu\Modular\Console\Commands\ModuleMiddlewareCommand;
 use Laltu\Modular\Console\Commands\ModuleDisableCommand;
 use Laltu\Modular\Console\Commands\ModuleEnableCommand;
 use Laltu\Modular\Console\Commands\ModuleListCommand;
@@ -120,6 +127,19 @@ final class LaravelModularServiceProvider extends ServiceProvider
 
         $this->app->alias(LaravelModular::class, \Laltu\Modular::class);
 
+        // Register new feature services
+        $this->app->singleton(\Laltu\Modular\Inertia\InertiaResponse::class, fn (): \Laltu\Modular\Inertia\InertiaResponse => new \Laltu\Modular\Inertia\InertiaResponse());
+        $this->app->bind(\Laltu\Modular\Broadcasting\ModuleBroadcast::class, fn ($app, $params = []): \Laltu\Modular\Broadcasting\ModuleBroadcast => new \Laltu\Modular\Broadcasting\ModuleBroadcast($params['module'] ?? null));
+        $this->app->bind(\Laltu\Modular\Support\ModuleCache::class, fn ($app, $params = []): \Laltu\Modular\Support\ModuleCache => new \Laltu\Modular\Support\ModuleCache($params['store'] ?? null));
+        $this->app->bind(\Laltu\Modular\Support\ModuleMiddleware::class, fn (): \Laltu\Modular\Support\ModuleMiddleware => new \Laltu\Modular\Support\ModuleMiddleware());
+        $this->app->singleton(\Laltu\Modular\Support\ModuleHealth::class, fn (): \Laltu\Modular\Support\ModuleHealth => new \Laltu\Modular\Support\ModuleHealth());
+        $this->app->singleton(\Laltu\Modular\Support\ModuleDependency::class, fn (): \Laltu\Modular\Support\ModuleDependency => new \Laltu\Modular\Support\ModuleDependency());
+        $this->app->singleton(\Laltu\Modular\Support\ModuleLifecycleTracker::class, fn (): \Laltu\Modular\Support\ModuleLifecycleTracker => new \Laltu\Modular\Support\ModuleLifecycleTracker());
+        $this->app->bind(\Laltu\Modular\Testing\ModuleMockContracts::class, fn (): \Laltu\Modular\Testing\ModuleMockContracts => new \Laltu\Modular\Testing\ModuleMockContracts());
+        $this->app->bind(\Laltu\Modular\Testing\ModuleFakeEvents::class, fn (): \Laltu\Modular\Testing\ModuleFakeEvents => new \Laltu\Modular\Testing\ModuleFakeEvents());
+        $this->app->bind(\Laltu\Modular\Queue\ModuleRetryPolicy::class, fn (): \Laltu\Modular\Queue\ModuleRetryPolicy => new \Laltu\Modular\Queue\ModuleRetryPolicy());
+        $this->app->bind(\Laltu\Modular\Queue\ModuleQueueWorker::class, fn (): \Laltu\Modular\Queue\ModuleQueueWorker => new \Laltu\Modular\Queue\ModuleQueueWorker());
+
         // Register communication services (synchronous API + asynchronous messaging)
         $this->app->register(CommunicationServiceProvider::class);
 
@@ -164,6 +184,12 @@ final class LaravelModularServiceProvider extends ServiceProvider
             ModuleDisableCommand::class,
             ModuleEnableCommand::class,
             ModuleListCommand::class,
+            InertiaModuleCommand::class,
+            ModuleCacheFlushCommand::class,
+            ModuleMiddlewareCommand::class,
+            ModuleBroadcastEvent::class,
+            ModuleHealthCheck::class,
+            ModuleDependencyGraph::class,
         ]);
 
         // Generator commands - only register if the Laravel base class exists
