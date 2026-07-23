@@ -12,35 +12,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Str;
 use LogicException;
 
-/**
- * Message bus for asynchronous communication between modules.
- *
- * Uses Laravel's queue system as the message broker.
- * Modules publish messages (fire-and-forget), and other modules
- * consume them via queue workers.
- *
- * Usage:
- * ```php
- * // Publishing a message (Module A)
- * MessageBus::publish(new OrderPlaced('ORD-123', 456, 99.99));
- *
- * // Consuming a message (Module B - in a Job)
- * final class ProcessOrderPlaced implements ShouldQueue
- * {
- *     public function __construct(
- *         public readonly OrderPlaced $message,
- *     ) {}
- *
- *     public function handle(): void
- *     {
- *         // Handle the message
- *     }
- * }
- *
- * // In Module B's service provider:
- * $messageBus->subscribe(OrderPlaced::class, ProcessOrderPlaced::class);
- * ```
- */
 final class MessageBus
 {
     /**

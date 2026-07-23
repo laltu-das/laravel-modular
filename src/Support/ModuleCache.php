@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Laltu\Modular\Support;
 
+use Closure;
 use Illuminate\Cache\Repository;
-use Illuminate\Contracts\Cache\Store;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Cache;
 final class ModuleCache
 {
     private ?string $module = null;
+
     private ?string $store = null;
 
     public function __construct(?string $store = null)
@@ -27,6 +28,7 @@ final class ModuleCache
     public function forModule(string $module): static
     {
         $this->module = $module;
+
         return $this;
     }
 
@@ -38,10 +40,11 @@ final class ModuleCache
         if ($this->module !== null) {
             return 'modular:'.$this->module.':'.$key;
         }
+
         return 'modular:global:'.$key;
     }
 
-    public function remember(string $key, int $ttl, \Closure $callback): mixed
+    public function remember(string $key, int $ttl, Closure $callback): mixed
     {
         $scoped = $this->scopedKey($key);
         $store = $this->store ? Cache::store($this->store) : Cache::store();
@@ -85,6 +88,7 @@ final class ModuleCache
     public function tags(array $tags): static
     {
         $this->store = null; // tags are handled by the cache driver directly
+
         return $this;
     }
 }

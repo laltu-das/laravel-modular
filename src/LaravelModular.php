@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Laltu\Modular;
 
 use Closure;
+use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Events\Dispatcher;
 use Laltu\Modular\Communication\Asynchronous\Message;
@@ -15,6 +16,7 @@ use Laltu\Modular\Discovery\ModuleRepository;
 use Laltu\Modular\Exceptions\ModuleNotFound;
 use Laltu\Modular\Support\CurrentTenant;
 use Laltu\Modular\Support\Module;
+use LogicException;
 
 final readonly class LaravelModular
 {
@@ -109,8 +111,11 @@ final readonly class LaravelModular
      * Resolve a public API interface from any enabled module.
      *
      * @template T of object
+     *
      * @param  class-string<T>  $interface
      * @return T
+     *
+     * @throws BindingResolutionException
      */
     public function api(string $interface): object
     {
@@ -121,8 +126,11 @@ final readonly class LaravelModular
      * Resolve a public API interface from a specific module.
      *
      * @template T of object
+     *
      * @param  class-string<T>  $interface
      * @return T
+     *
+     * @throws BindingResolutionException
      */
     public function apiFrom(string $interface, string $moduleName): object
     {
@@ -141,6 +149,8 @@ final readonly class LaravelModular
      * Get all public APIs across all enabled modules.
      *
      * @return array<string, array<string, string>>
+     *
+     * @throws BindingResolutionException
      */
     public function allApis(): array
     {
@@ -149,6 +159,7 @@ final readonly class LaravelModular
 
     /**
      * Find which enabled module declares the given public API interface.
+     * @throws BindingResolutionException
      */
     public function getProviderModule(string $interface): ?string
     {
@@ -163,7 +174,7 @@ final readonly class LaravelModular
         $messageBus = $this->container->make(MessageBus::class);
 
         if (! $messageBus instanceof MessageBus) {
-            throw new \LogicException('The message bus service is not registered correctly.');
+            throw new LogicException('The message bus service is not registered correctly.');
         }
 
         return $messageBus;
@@ -179,6 +190,7 @@ final readonly class LaravelModular
 
     /**
      * Publish a message to its configured channel after a delay.
+     * @throws BindingResolutionException
      */
     public function publishMessageLater(Message $message, int $delay): string
     {
@@ -190,7 +202,7 @@ final readonly class LaravelModular
         $moduleApi = $this->container->make(ModuleApi::class);
 
         if (! $moduleApi instanceof ModuleApi) {
-            throw new \LogicException('The module API service is not registered correctly.');
+            throw new LogicException('The module API service is not registered correctly.');
         }
 
         return $moduleApi;

@@ -6,32 +6,6 @@ namespace Laltu\Modular\Communication\Asynchronous;
 
 use JsonSerializable;
 
-/**
- * Base contract for all messages in the modular monolith.
- *
- * Messages represent asynchronous communication between modules.
- * They are serializable and dispatched to a message broker (queue).
- *
- * Unlike Events (which are synchronous by default in Laravel),
- * Messages are always processed asynchronously via queues.
- *
- * Usage:
- * ```php
- * final readonly class OrderPlaced extends BaseMessage
- * {
- *     public function __construct(
- *         public string $orderId,
- *         public int $customerId,
- *         public float $total,
- *     ) {}
- *
- *     public function channel(): string
- *     {
- *         return 'orders';
- *     }
- * }
- * ```
- */
 interface Message extends JsonSerializable
 {
     /**

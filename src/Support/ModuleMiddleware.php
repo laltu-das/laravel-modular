@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Laltu\Modular\Support;
 
-use Illuminate\Support\Collection;
-
 /**
  * Module-level middleware stacks.
  */

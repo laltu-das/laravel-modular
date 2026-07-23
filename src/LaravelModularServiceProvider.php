@@ -7,13 +7,16 @@ namespace Laltu\Modular;
 use Composer\Autoload\ClassLoader;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Auth\Access\Gate;
+use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Laltu\Modular;
 use Laltu\Modular\Boundaries\ModuleBoundaryInspector;
+use Laltu\Modular\Broadcasting\ModuleBroadcast;
 use Laltu\Modular\Communication\CommunicationServiceProvider;
 use Laltu\Modular\Console\Commands\CastMakeCommand;
 use Laltu\Modular\Console\Commands\ChannelMakeCommand;
@@ -24,29 +27,28 @@ use Laltu\Modular\Console\Commands\EnumMakeCommand;
 use Laltu\Modular\Console\Commands\EventMakeCommand;
 use Laltu\Modular\Console\Commands\ExceptionMakeCommand;
 use Laltu\Modular\Console\Commands\FactoryMakeCommand;
+use Laltu\Modular\Console\Commands\InertiaModuleCommand;
 use Laltu\Modular\Console\Commands\InterfaceMakeCommand;
 use Laltu\Modular\Console\Commands\JobMakeCommand;
 use Laltu\Modular\Console\Commands\LaravelModularCommand;
 use Laltu\Modular\Console\Commands\ListenerMakeCommand;
 use Laltu\Modular\Console\Commands\MailMakeCommand;
 use Laltu\Modular\Console\Commands\MakeModuleCommand;
-use Laltu\Modular\Console\Commands\MiddlewareMakeCommand;
-use Laltu\Modular\Console\Commands\ModelMakeCommand;
 use Laltu\Modular\Console\Commands\MessageConsumeCommand;
 use Laltu\Modular\Console\Commands\MessageMakeCommand;
 use Laltu\Modular\Console\Commands\MessageQueuesCommand;
+use Laltu\Modular\Console\Commands\MiddlewareMakeCommand;
+use Laltu\Modular\Console\Commands\ModelMakeCommand;
 use Laltu\Modular\Console\Commands\ModuleApisCommand;
 use Laltu\Modular\Console\Commands\ModuleBoundariesCommand;
-use Laltu\Modular\Broadcasting\ModuleBroadcast;
-use Laltu\Modular\Console\Commands\InertiaModuleCommand;
 use Laltu\Modular\Console\Commands\ModuleBroadcastEvent;
-use Laltu\Modular\Console\Commands\ModuleHealthCheck;
-use Laltu\Modular\Console\Commands\ModuleDependencyGraph;
 use Laltu\Modular\Console\Commands\ModuleCacheFlushCommand;
-use Laltu\Modular\Console\Commands\ModuleMiddlewareCommand;
+use Laltu\Modular\Console\Commands\ModuleDependencyGraph;
 use Laltu\Modular\Console\Commands\ModuleDisableCommand;
 use Laltu\Modular\Console\Commands\ModuleEnableCommand;
+use Laltu\Modular\Console\Commands\ModuleHealthCheck;
 use Laltu\Modular\Console\Commands\ModuleListCommand;
+use Laltu\Modular\Console\Commands\ModuleMiddlewareCommand;
 use Laltu\Modular\Console\Commands\NotificationMakeCommand;
 use Laltu\Modular\Console\Commands\ObserverMakeCommand;
 use Laltu\Modular\Console\Commands\PolicyMakeCommand;
@@ -65,9 +67,19 @@ use Laltu\Modular\Discovery\ModuleClassDiscovery;
 use Laltu\Modular\Discovery\ModuleRepository;
 use Laltu\Modular\Events\ModuleBooted;
 use Laltu\Modular\Events\ModuleBooting;
+use Laltu\Modular\Inertia\InertiaResponse;
+use Laltu\Modular\Queue\ModuleQueueWorker;
+use Laltu\Modular\Queue\ModuleRetryPolicy;
 use Laltu\Modular\Support\Config;
 use Laltu\Modular\Support\CurrentTenant;
 use Laltu\Modular\Support\Module;
+use Laltu\Modular\Support\ModuleCache;
+use Laltu\Modular\Support\ModuleDependency;
+use Laltu\Modular\Support\ModuleHealth;
+use Laltu\Modular\Support\ModuleLifecycleTracker;
+use Laltu\Modular\Support\ModuleMiddleware;
+use Laltu\Modular\Testing\ModuleFakeEvents;
+use Laltu\Modular\Testing\ModuleMockContracts;
 
 final class LaravelModularServiceProvider extends ServiceProvider
 {
@@ -113,8 +125,8 @@ final class LaravelModularServiceProvider extends ServiceProvider
             $app->make(Filesystem::class),
         ));
 
-        if (! class_exists(\Laltu\Modular::class, false)) {
-            class_alias(LaravelModular::class, \Laltu\Modular::class);
+        if (! class_exists(Modular::class, false)) {
+            class_alias(LaravelModular::class, Modular::class);
         }
 
         $this->app->singleton(LaravelModular::class, fn (Application $app): LaravelModular => new LaravelModular(
@@ -125,20 +137,18 @@ final class LaravelModularServiceProvider extends ServiceProvider
             $app->make(Dispatcher::class),
         ));
 
-        $this->app->alias(LaravelModular::class, \Laltu\Modular::class);
+        $this->app->alias(LaravelModular::class, Modular::class);
 
         // Register new feature services
-        $this->app->singleton(\Laltu\Modular\Inertia\InertiaResponse::class, fn (): \Laltu\Modular\Inertia\InertiaResponse => new \Laltu\Modular\Inertia\InertiaResponse());
-        $this->app->bind(\Laltu\Modular\Broadcasting\ModuleBroadcast::class, fn ($app, $params = []): \Laltu\Modular\Broadcasting\ModuleBroadcast => new \Laltu\Modular\Broadcasting\ModuleBroadcast($params['module'] ?? null));
-        $this->app->bind(\Laltu\Modular\Support\ModuleCache::class, fn ($app, $params = []): \Laltu\Modular\Support\ModuleCache => new \Laltu\Modular\Support\ModuleCache($params['store'] ?? null));
-        $this->app->bind(\Laltu\Modular\Support\ModuleMiddleware::class, fn (): \Laltu\Modular\Support\ModuleMiddleware => new \Laltu\Modular\Support\ModuleMiddleware());
-        $this->app->singleton(\Laltu\Modular\Support\ModuleHealth::class, fn (): \Laltu\Modular\Support\ModuleHealth => new \Laltu\Modular\Support\ModuleHealth());
-        $this->app->singleton(\Laltu\Modular\Support\ModuleDependency::class, fn (): \Laltu\Modular\Support\ModuleDependency => new \Laltu\Modular\Support\ModuleDependency());
-        $this->app->singleton(\Laltu\Modular\Support\ModuleLifecycleTracker::class, fn (): \Laltu\Modular\Support\ModuleLifecycleTracker => new \Laltu\Modular\Support\ModuleLifecycleTracker());
-        $this->app->bind(\Laltu\Modular\Testing\ModuleMockContracts::class, fn (): \Laltu\Modular\Testing\ModuleMockContracts => new \Laltu\Modular\Testing\ModuleMockContracts());
-        $this->app->bind(\Laltu\Modular\Testing\ModuleFakeEvents::class, fn (): \Laltu\Modular\Testing\ModuleFakeEvents => new \Laltu\Modular\Testing\ModuleFakeEvents());
-        $this->app->bind(\Laltu\Modular\Queue\ModuleRetryPolicy::class, fn (): \Laltu\Modular\Queue\ModuleRetryPolicy => new \Laltu\Modular\Queue\ModuleRetryPolicy());
-        $this->app->bind(\Laltu\Modular\Queue\ModuleQueueWorker::class, fn (): \Laltu\Modular\Queue\ModuleQueueWorker => new \Laltu\Modular\Queue\ModuleQueueWorker());
+        $this->app->singleton(InertiaResponse::class, fn (): InertiaResponse => new InertiaResponse);
+        $this->app->bind(ModuleBroadcast::class, fn ($app, $params = []): ModuleBroadcast => new ModuleBroadcast($params['module'] ?? null));
+        $this->app->bind(ModuleCache::class, fn ($app, $params = []): ModuleCache => new ModuleCache($params['store'] ?? null));
+        $this->app->bind(ModuleMiddleware::class, fn (): ModuleMiddleware => new ModuleMiddleware);
+        $this->app->singleton(ModuleHealth::class, fn (): ModuleHealth => new ModuleHealth);
+        $this->app->singleton(ModuleDependency::class, fn (): ModuleDependency => new ModuleDependency);
+        $this->app->singleton(ModuleLifecycleTracker::class, fn (): ModuleLifecycleTracker => new ModuleLifecycleTracker);
+        $this->app->bind(ModuleRetryPolicy::class, fn (): ModuleRetryPolicy => new ModuleRetryPolicy);
+        $this->app->bind(ModuleQueueWorker::class, fn (): ModuleQueueWorker => new ModuleQueueWorker);
 
         // Register communication services (synchronous API + asynchronous messaging)
         $this->app->register(CommunicationServiceProvider::class);
@@ -396,7 +406,8 @@ final class LaravelModularServiceProvider extends ServiceProvider
      * module's Listeners directory, whose handled event is inferred from the
      * type-hint of its handle method.
      *
-     * @param  array<string, mixed>  $manifest
+     * @param array<string, mixed> $manifest
+     * @throws BindingResolutionException
      */
     private function registerModuleListeners(Module $module, array $manifest): void
     {

@@ -12,7 +12,7 @@ use Laltu\Modular\LaravelModular;
 
 final class CommunicationServiceProvider extends ServiceProvider
 {
-    private const QUEUE_MONITOR_CONTRACT = 'Illuminate\\Contracts\\Queue\\Monitor';
+    private const string QUEUE_MONITOR_CONTRACT = 'Illuminate\\Contracts\\Queue\\Monitor';
 
     public function register(): void
     {
