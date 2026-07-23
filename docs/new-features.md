@@ -1,14 +1,5 @@
 # New Features
 
-## Inertia.js Support
-
-Module-aware Inertia rendering via `InertiaResponse` and `ModuleInertia` trait.
-
-- `php artisan module:inertia {module}` - Generate scaffolding
-- Middleware: `InertiaMiddleware`
-- Controller trait: `ModuleInertia`
-- Config: `laravel-modular.inertia.enabled`
-
 ## API Support
 
 Standardized API responses and resources for modules.

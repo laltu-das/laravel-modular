@@ -27,7 +27,7 @@ use Laltu\Modular\Console\Commands\EnumMakeCommand;
 use Laltu\Modular\Console\Commands\EventMakeCommand;
 use Laltu\Modular\Console\Commands\ExceptionMakeCommand;
 use Laltu\Modular\Console\Commands\FactoryMakeCommand;
-use Laltu\Modular\Console\Commands\InertiaModuleCommand;
+
 use Laltu\Modular\Console\Commands\InterfaceMakeCommand;
 use Laltu\Modular\Console\Commands\JobMakeCommand;
 use Laltu\Modular\Console\Commands\LaravelModularCommand;
@@ -67,7 +67,7 @@ use Laltu\Modular\Discovery\ModuleClassDiscovery;
 use Laltu\Modular\Discovery\ModuleRepository;
 use Laltu\Modular\Events\ModuleBooted;
 use Laltu\Modular\Events\ModuleBooting;
-use Laltu\Modular\Inertia\InertiaResponse;
+
 use Laltu\Modular\Queue\ModuleQueueWorker;
 use Laltu\Modular\Queue\ModuleRetryPolicy;
 use Laltu\Modular\Support\Config;
@@ -140,7 +140,7 @@ final class LaravelModularServiceProvider extends ServiceProvider
         $this->app->alias(LaravelModular::class, Modular::class);
 
         // Register new feature services
-        $this->app->singleton(InertiaResponse::class, fn (): InertiaResponse => new InertiaResponse);
+
         $this->app->bind(ModuleBroadcast::class, fn ($app, $params = []): ModuleBroadcast => new ModuleBroadcast($params['module'] ?? null));
         $this->app->bind(ModuleCache::class, fn ($app, $params = []): ModuleCache => new ModuleCache($params['store'] ?? null));
         $this->app->bind(ModuleMiddleware::class, fn (): ModuleMiddleware => new ModuleMiddleware);
@@ -194,7 +194,7 @@ final class LaravelModularServiceProvider extends ServiceProvider
             ModuleDisableCommand::class,
             ModuleEnableCommand::class,
             ModuleListCommand::class,
-            InertiaModuleCommand::class,
+
             ModuleCacheFlushCommand::class,
             ModuleMiddlewareCommand::class,
             ModuleBroadcastEvent::class,

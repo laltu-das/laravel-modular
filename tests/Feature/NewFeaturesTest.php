@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Laltu\Modular\Api\ApiResponse;
-use Laltu\Modular\Inertia\InertiaResponse;
 use Laltu\Modular\Broadcasting\ModuleBroadcast;
 use Laltu\Modular\Support\ModuleCache;
 use Laltu\Modular\Support\ModuleMiddleware;
@@ -23,13 +22,7 @@ test('api response creates standard payload', function () {
     ]);
 });
 
-test('inertia response creates module aware component', function () {
-    $res = new InertiaResponse('Billing');
-    $res->component('Dashboard');
-    $res->with(['key' => 'value']);
 
-    expect($res)->toBeInstanceOf(InertiaResponse::class);
-});
 
 test('module middleware registers stacks', function () {
     $stack = new ModuleMiddleware();

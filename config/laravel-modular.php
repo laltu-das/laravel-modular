@@ -66,18 +66,7 @@ return [
         'views' => true,         // {Module}/resources/views (namespaced by module)
     ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | Inertia.js (optional)
-    |--------------------------------------------------------------------------
-    |
-    | Module-aware Inertia rendering with SSR scaffolding.
-    */
-    'inertia' => [
-        'enabled' => false,
-        'ssr_enabled' => false,
-        'version' => '1.0.0',
-    ],
+
 
     /*
     |--------------------------------------------------------------------------
