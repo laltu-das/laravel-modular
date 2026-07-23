@@ -92,7 +92,7 @@ final class MessageMakeCommand extends Command
 
     private function getStub(bool $asContract): string
     {
-        $stubPath = __DIR__.'/../../stubs/message'.($asContract ? '.contract' : '').'.stub';
+        $stubPath = __DIR__ . '/../../stubs/message' .($asContract ? '.contract' : '').'.stub';
 
         if ($this->files->exists($stubPath)) {
             return $this->files->get($stubPath);

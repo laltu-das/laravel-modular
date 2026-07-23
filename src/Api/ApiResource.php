@@ -38,5 +38,8 @@ abstract class ApiResource extends JsonResource
         ]);
     }
 
-    abstract public function toArray($request): array;
+    public function toArray($request): array
+    {
+        // TODO: Implement toArray() method.
+    }
 }

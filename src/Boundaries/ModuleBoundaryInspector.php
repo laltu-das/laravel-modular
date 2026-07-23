@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Laltu\Modular\Boundaries;
 
+use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Filesystem\Filesystem;
 use Laltu\Modular\Support\Module;
 
@@ -21,9 +22,10 @@ final readonly class ModuleBoundaryInspector
     }
 
     /**
-     * @param  array<int, Module>  $modules
-     * @param  list<string>  $publicDirectories
+     * @param array<int, Module> $modules
+     * @param list<string> $publicDirectories
      * @return list<array{module: string, file: string, referenced: string}>
+     * @throws FileNotFoundException
      */
     public function inspect(array $modules, string $namespace, array $publicDirectories): array
     {

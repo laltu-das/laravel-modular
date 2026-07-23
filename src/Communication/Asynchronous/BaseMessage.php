@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Laltu\Modular\Communication\Asynchronous;
 
+use ReflectionClass;
+use ReflectionProperty;
+
 /**
  * Base implementation of the Message contract.
  *
@@ -83,7 +86,7 @@ abstract class BaseMessage implements Message
     {
         $data = [];
 
-        foreach ((new \ReflectionClass($this))->getProperties(\ReflectionProperty::IS_PUBLIC) as $prop) {
+        foreach ((new ReflectionClass($this))->getProperties(ReflectionProperty::IS_PUBLIC) as $prop) {
             $data[$prop->getName()] = $prop->getValue($this);
         }
 

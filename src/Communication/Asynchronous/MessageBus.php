@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Laltu\Modular\Communication\Asynchronous;
 
 use Closure;
+use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Queue\Factory as QueueFactory;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Str;
+use LogicException;
 
 /**
  * Message bus for asynchronous communication between modules.
@@ -47,14 +49,16 @@ final class MessageBus
     private array $subscriptions = [];
 
     public function __construct(
-        private QueueFactory|Container $queue,
-        private ?object $monitor = null,
+        private readonly QueueFactory|Container $queue,
+        private readonly ?object $monitor = null,
     ) {}
 
     /**
      * Publish a message to the message broker (fire-and-forget).
      *
      * @return string The job ID, or a generated local ID when the queue driver does not return one.
+     *
+     * @throws BindingResolutionException
      */
     public function publish(Message $message): string
     {
@@ -74,6 +78,8 @@ final class MessageBus
      * Publish a message with a delay.
      *
      * @return string The job ID, or a generated local ID when the queue driver does not return one.
+     *
+     * @throws BindingResolutionException
      */
     public function publishLater(Message $message, int $delay): string
     {
@@ -90,6 +96,8 @@ final class MessageBus
      *
      * @param  iterable<Message>  $messages
      * @return list<string> Job IDs
+     *
+     * @throws BindingResolutionException
      */
     public function publishBatch(iterable $messages): array
     {
@@ -120,7 +128,6 @@ final class MessageBus
      * Subscribe a closure to handle a specific message type.
      *
      * @param  class-string<Message>  $messageClass
-     * @param  Closure  $handler
      */
     public function subscribeClosure(string $messageClass, Closure $handler): void
     {
@@ -177,6 +184,9 @@ final class MessageBus
         return $normalized;
     }
 
+    /**
+     * @throws BindingResolutionException
+     */
     private function queue(): QueueFactory
     {
         if ($this->queue instanceof QueueFactory) {
@@ -186,7 +196,7 @@ final class MessageBus
         $queue = $this->queue->make(QueueFactory::class);
 
         if (! $queue instanceof QueueFactory) {
-            throw new \LogicException('The queue factory service is not registered correctly.');
+            throw new LogicException('The queue factory service is not registered correctly.');
         }
 
         return $queue;
